@@ -78,7 +78,7 @@ static const osEventFlagsAttr_t evn_attr = { .name = "CmndEvents" };
 static void TaskCommand( void *argument );
 static void ExecCommand( char *buff );
 static void WaterLog( uint8_t cnt_view );
-static ErrorStatus StrHexToBin( char *str, uint8_t *hex );
+static ErrorStatus StrHexToBin( char *str, uint8_t *hex, uint8_t size );
 static ErrorStatus HexToBin( char *ptr, uint8_t *bin );
 
 #ifdef DEBUG_TARGET
@@ -127,18 +127,18 @@ static const char *help = {
     "config {cold/hot/filter} xxxxx  - Setting incremental values for water meters.\r\n"
     "config uart xxxxx               - Setting the speed baud (600 - 115200).\r\n"
     "config modbus speed xxxxx       - Setting the speed baud (600 - 115200).\r\n"
-    "config modbus id xxxxx          - Setting the device ID on the modbus.\r\n"
-    "config can id xxxxx             - Setting the Device ID on the CAN Bus.\r\n"
+    "config modbus id 0x01 - 0xF8    - Setting the device ID on the modbus (HEX format without 0x).\r\n"
+    "config can id 0xXXXXXXXX        - Setting the Device ID on the CAN Bus (HEX format without 0x).\r\n"
     "config can addr xxxxx           - Setting the width of the CAN bus identifier (11/29 bits).\r\n"
     "config can speed xxxxx          - Set the CAN bus speed 10,20,50,125,250,500 (kbit/s).\r\n"
     "config pres_max xxxxx           - Set the maximum pressure for the sensor.\r\n"
     "config pres_omin xxxxx          - Setting the minimum output voltage of the pressure sensor.\r\n"
     "config pres_omax xxxxx          - Setting the maximum output voltage of the pressure sensor.\r\n"
-    "config panid 0x0000 - 0xFFFE    - Network PANID.\r\n"
+    "config panid 0x0000 - 0xFFFE    - Network PANID (HEX format without 0x).\r\n"
     "config netgrp 1-99              - Network group number.\r\n"
-    "config netkey XXXX....          - Network key.\r\n"
-    "config devnumb 0x0001 - 0xFFFF  - Device number on the network.\r\n"
-    "config gate 0x0000- 0xFFF8      - Gateway address.\r\n"
+    "config netkey XXXX....          - Network key (HEX format without 0x).\r\n"
+    "config devnumb 0x0001 - 0xFFFF  - Device number on the network (HEX format without 0x).\r\n"
+    "config gate 0x0000- 0xFFF8      - Gateway address (HEX format without 0x).\r\n"
     "version                         - Displays the version number and date.\r\n"
     #ifdef DEBUG_TARGET              
     "reset                           - Reset controller.\r\n"
@@ -279,7 +279,6 @@ static void CmndTask( uint8_t cnt_par, char *param ) {
 static void CmndConfig( uint8_t cnt_par, char *param ) {
 
     char *ptr;
-    uint16_t value16;
     uint8_t error, ind, bin[sizeof( config.net_key )];
     CANSpeed can_speed;
     UARTSpeed uart_speed;
@@ -288,14 +287,14 @@ static void CmndConfig( uint8_t cnt_par, char *param ) {
         float    val_float;
         uint8_t  val_uint8;
         uint16_t val_uint16;
-        uint32_t val_unit32;
+        uint32_t val_uint32;
        } value;
 
     //установка скорости UART порта отладки
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "uart" ) ) {
-        value.val_unit32 = atol( GetParamVal( IND_PARAM2 ) );
+        value.val_uint32 = atol( GetParamVal( IND_PARAM2 ) );
         //проверка на допустимые значения скорости UART порта
-        if ( CheckBaudRate( value.val_unit32, &uart_speed ) == SUCCESS ) {
+        if ( CheckBaudRate( value.val_uint32, &uart_speed ) == SUCCESS ) {
             change = true;
             config.debug_speed = uart_speed;
            }
@@ -303,39 +302,39 @@ static void CmndConfig( uint8_t cnt_par, char *param ) {
        }
     //установка значения инкремента для счетчика горячей воды
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "cold" ) ) {
-        value.val_unit32 = atol( GetParamVal( IND_PARAM2 ) );
+        value.val_uint32 = atol( GetParamVal( IND_PARAM2 ) );
         //проверка на максимальное значение инкремента приращения показаний счетчика
-        if ( value.val_unit32 <= 1000 ) {
+        if ( value.val_uint32 <= 1000 ) {
             change = true;
-            config.inc_cnt_cold = value.val_unit32;
+            config.inc_cnt_cold = value.val_uint32;
            }
         else UartSendStr( (char *)msg_err_param );
        }
     //установка значения инкремента для счетчика холодный воды
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "hot" ) ) {
-        value.val_unit32 = atol( GetParamVal( IND_PARAM2 ) );
+        value.val_uint32 = atol( GetParamVal( IND_PARAM2 ) );
         //проверка на максимальное значение инкремента приращения показаний счетчика
-        if ( value.val_unit32 <= 1000 ) {
+        if ( value.val_uint32 <= 1000 ) {
             change = true;
-            config.inc_cnt_hot = value.val_unit32;
+            config.inc_cnt_hot = value.val_uint32;
            }
         else UartSendStr( (char *)msg_err_param );
        }
     //установка значения инкремента для счетчика питьевой воды
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "filter" ) ) {
-        value.val_unit32 = atol( GetParamVal( IND_PARAM2 ) );
+        value.val_uint32 = atol( GetParamVal( IND_PARAM2 ) );
         //проверка на максимальное значение инкремента приращения показаний счетчика
-        if ( value.val_unit32 <= 1000 ) {
+        if ( value.val_uint32 <= 1000 ) {
             change = true;
-            config.inc_cnt_filter = value.val_unit32;
+            config.inc_cnt_filter = value.val_uint32;
            }
         else UartSendStr( (char *)msg_err_param );
        }
     //установка скорости RS-485 порта (MODBUS)
     if ( cnt_par == 4 && !strcasecmp( GetParamVal( IND_PARAM1 ), "modbus" ) && !strcasecmp( GetParamVal( IND_PARAM2 ), "speed" ) ) {
-        value.val_unit32 = atol( GetParamVal( IND_PARAM3 ) );
+        value.val_uint32 = atol( GetParamVal( IND_PARAM3 ) );
         //проверка на допустимое значение скорости UART порта
-        if ( CheckBaudRate( value.val_unit32, &uart_speed ) == SUCCESS ) {
+        if ( CheckBaudRate( value.val_uint32, &uart_speed ) == SUCCESS ) {
             change = true;
             config.modbus_speed = uart_speed;
            }
@@ -343,39 +342,45 @@ static void CmndConfig( uint8_t cnt_par, char *param ) {
        }
     //установка адреса ведомого уст-ва MODBUS
     if ( cnt_par == 4 && !strcasecmp( GetParamVal( IND_PARAM1 ), "modbus" ) && !strcasecmp( GetParamVal( IND_PARAM2 ), "id" ) ) {
-        value.val_unit32 = atol( GetParamVal( IND_PARAM3 ) );
-        //проверка на допустимые значения для ID адреса уст-ва
-        if ( value.val_unit32 > 0 && value.val_unit32 < 248  ) {
-            change = true;
-            config.modbus_id = value.val_unit32;
+        if ( StrHexToBin( GetParamVal( IND_PARAM3 ), (uint8_t *)&value.val_uint8, sizeof( value.val_uint8 ) ) == SUCCESS ) {
+            //проверка на допустимые значения для ID адреса уст-ва
+            if ( value.val_uint8 > 0 && value.val_uint8 < 248  ) {
+                change = true;
+                config.modbus_id = value.val_uint8;
+               }
+            else UartSendStr( (char *)msg_err_param );
            }
         else UartSendStr( (char *)msg_err_param );
        }
     //установка идентификатора уст-ва CAN шины
     if ( cnt_par == 4 && !strcasecmp( GetParamVal( IND_PARAM1 ), "can" ) && !strcasecmp( GetParamVal( IND_PARAM2 ), "id" ) ) {
-        value.val_unit32 = atol( GetParamVal( IND_PARAM3 ) );
-        //проверка на допустимые значения для ID адреса уст-ва
-        if ( ( config.can_addr == CAN_ADDRESS_11_BIT && value.val_unit32 <= 0x7FF ) || ( config.can_addr == CAN_ADDRESS_29_BIT && value.val_unit32 <= 0x1FFFFFFF ) ) {
-            change = true;
-            config.can_id = value.val_unit32;
+        if ( StrHexToBin( GetParamVal( IND_PARAM3 ), (uint8_t *)&value.val_uint32, sizeof( value.val_uint32 ) ) == SUCCESS ) {
+            //после обработки строки в StrHexToBin() данные в uint32_t будут в модели big endian (от старшего к младшему)
+            value.val_uint32 = __REV( value.val_uint32 );
+            //проверка на допустимые значения для ID адреса уст-ва
+            if ( ( config.can_addr == CAN_ADDRESS_11_BIT && value.val_uint32 <= 0x7FF ) || ( config.can_addr == CAN_ADDRESS_29_BIT && value.val_uint32 <= 0x1FFFFFFF ) ) {
+                change = true;
+                config.can_id = value.val_uint32;
+               }
+            else UartSendStr( (char *)msg_err_param );
            }
         else UartSendStr( (char *)msg_err_param );
        }
     //установка размера адресации уст-ва CAN шины (11/29 бит CAN 2.0 A/B)
     if ( cnt_par == 4 && !strcasecmp( GetParamVal( IND_PARAM1 ), "can" ) && !strcasecmp( GetParamVal( IND_PARAM2 ), "addr" ) ) {
-        value.val_unit32 = atol( GetParamVal( IND_PARAM3 ) );
+        value.val_uint32 = atol( GetParamVal( IND_PARAM3 ) );
         //проверка на допустимое значение разрядности ID шины
-        if ( value.val_unit32 == 11 || value.val_unit32 == 29 ) {
+        if ( value.val_uint8 == 11 || value.val_uint8 == 29 ) {
             change = true;
-            config.can_addr = ( value.val_unit32 == 11 ? CAN_ADDRESS_11_BIT : CAN_ADDRESS_29_BIT );
+            config.can_addr = ( value.val_uint8 == 11 ? CAN_ADDRESS_11_BIT : CAN_ADDRESS_29_BIT );
            }
         else UartSendStr( (char *)msg_err_param );
        }
     //установка скорости обмена по CAN шине
     if ( cnt_par == 4 && !strcasecmp( GetParamVal( IND_PARAM1 ), "can" ) && !strcasecmp( GetParamVal( IND_PARAM2 ), "speed" ) ) {
-        value.val_unit32 = atol( GetParamVal( IND_PARAM3 ) );
+        value.val_uint32 = atol( GetParamVal( IND_PARAM3 ) );
         //проверка на допустимые значения скорости CAN шины
-        if ( CheckCanSpeed( value.val_unit32, &can_speed ) == SUCCESS ) {
+        if ( CheckCanSpeed( value.val_uint32, &can_speed ) == SUCCESS ) {
             change = true;
             config.can_speed = can_speed;
            }
@@ -413,14 +418,11 @@ static void CmndConfig( uint8_t cnt_par, char *param ) {
        }
     //установка адреса сети в канале
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "panid" ) ) {
-        if ( strlen( GetParamVal( IND_PARAM2 ) ) == sizeof( config.net_pan_id ) * 2 ) {
-            if ( StrHexToBin( GetParamVal( IND_PARAM2 ), (uint8_t *)&value16 ) == SUCCESS ) {
-                if ( value16 <= MAX_NETWORK_PANID ) {
-                    change = true;
-                    memcpy( (uint8_t *)&config.net_pan_id, (uint8_t *)&value16, sizeof( config.net_pan_id ) );
-                    config.net_pan_id = __REVSH( config.net_pan_id );
-                   }
-                else UartSendStr( (char *)msg_err_param );
+        if ( StrHexToBin( GetParamVal( IND_PARAM2 ), (uint8_t *)&value.val_uint16, sizeof( value.val_uint16 ) ) == SUCCESS ) {
+            if ( value.val_uint16 <= MAX_NETWORK_PANID ) {
+                change = true;
+                memcpy( (uint8_t *)&config.net_pan_id, (uint8_t *)&value.val_uint16, sizeof( config.net_pan_id ) );
+                config.net_pan_id = __REVSH( config.net_pan_id );
                }
             else UartSendStr( (char *)msg_err_param );
            }
@@ -428,25 +430,19 @@ static void CmndConfig( uint8_t cnt_par, char *param ) {
        }
     //установка ключа сети
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "netkey" ) ) {
-        if ( strlen( GetParamVal( IND_PARAM2 ) ) == sizeof( config.net_key ) * 2 ) {
-            if ( StrHexToBin( GetParamVal( IND_PARAM2 ), (uint8_t *)&bin ) == SUCCESS ) {
-                change = true;
-                memcpy( config.net_key, bin, sizeof( config.net_key ) );
-               }
-            else UartSendStr( (char *)msg_err_param );
+        if ( StrHexToBin( GetParamVal( IND_PARAM2 ), (uint8_t *)&bin, sizeof( bin ) ) == SUCCESS ) {
+            change = true;
+            memcpy( config.net_key, bin, sizeof( config.net_key ) );
            }
         else UartSendStr( (char *)msg_err_param );
        }
     //номер устройства в сети
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "devnumb" ) ) {
-        if ( strlen( GetParamVal( IND_PARAM2 ) ) == sizeof( config.dev_numb ) * 2 ) {
-            if ( StrHexToBin( GetParamVal( IND_PARAM2 ), (uint8_t *)&value16 ) == SUCCESS ) {
-                if ( value16 && value16 <= MAX_DEVICE_NUMB ) {
-                    change = true;
-                    memcpy( (uint8_t *)&config.dev_numb, (uint8_t *)&value16, sizeof( config.dev_numb ) );
-                    config.dev_numb = __REVSH( config.dev_numb );
-                   }
-                else UartSendStr( (char *)msg_err_param );
+        if ( StrHexToBin( GetParamVal( IND_PARAM2 ), (uint8_t *)&value.val_uint16, sizeof( value.val_uint16 ) ) == SUCCESS ) {
+            if ( value.val_uint16 && value.val_uint16 <= MAX_DEVICE_NUMB ) {
+                change = true;
+                memcpy( (uint8_t *)&config.dev_numb, (uint8_t *)&value.val_uint16, sizeof( config.dev_numb ) );
+                config.dev_numb = __REVSH( config.dev_numb );
                }
             else UartSendStr( (char *)msg_err_param );
            }
@@ -462,14 +458,11 @@ static void CmndConfig( uint8_t cnt_par, char *param ) {
        }
     //установка адреса шлюза с сети
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "gate" ) ) {
-        if ( strlen( GetParamVal( IND_PARAM2 ) ) == sizeof( config.addr_gate ) * 2 ) {
-            if ( StrHexToBin( GetParamVal( IND_PARAM2 ), (uint8_t *)&value16 ) == SUCCESS ) {
-                if ( value16 <= MAX_NETWORK_ADDR ) {
-                    change = true;
-                    memcpy( (uint8_t *)&config.addr_gate, (uint8_t *)&value16, sizeof( config.addr_gate ) );
-                    config.addr_gate = __REVSH( config.addr_gate );
-                   }
-                else UartSendStr( (char *)msg_err_param );
+        if ( StrHexToBin( GetParamVal( IND_PARAM2 ), (uint8_t *)&value.val_uint16, sizeof( value.val_uint16 ) ) == SUCCESS ) {
+            if ( value.val_uint16 <= MAX_NETWORK_ADDR ) {
+                change = true;
+                memcpy( (uint8_t *)&config.addr_gate, (uint8_t *)&value.val_uint16, sizeof( config.addr_gate ) );
+                config.addr_gate = __REVSH( config.addr_gate );
                }
             else UartSendStr( (char *)msg_err_param );
            }
@@ -1069,13 +1062,18 @@ void DataHexDump( uint8_t *data, HEX_TYPE_ADDR type_addr, uint32_t addr, char *b
 //-------------------------------------------------------------------------------------------------
 // char *str        - указатель на исходную строку с HEX значениями
 // uint8_t *hex     - указатель для массив для размещения результата
+// uint8_t size     - размер переменной для размещения результата
 // return = SUCCESS - преобразование выполнено без ошибок
 //        = ERROR   - преобразование не выполнено, есть не допустимые символы
 //*************************************************************************************************
-static ErrorStatus StrHexToBin( char *str, uint8_t *hex ) {
+static ErrorStatus StrHexToBin( char *str, uint8_t *hex, uint8_t size ) {
 
-    uint8_t high, low;
+    uint8_t high, low, len;
     
+    len = strlen( str );
+    //проверка на длину строки и кратность длины строки = 2 
+    if ( ( len/2 ) > size || ( len & 0x01 ) )
+        return ERROR;
     while ( *str ) {
         high = low = 0;
         if ( HexToBin( str, &high ) == ERROR )

@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #define MAX_CNT_PARAM       10          //максимальное кол-во параметров, включая команду
-#define MAX_LEN_PARAM       20          //максимальный размер (длина) одного параметра в командной строке
+#define MAX_LEN_PARAM       35          //максимальный размер (длина) одного параметра в командной строке
 
 #define SIZE_ARRAY( array ) ( sizeof( array )/sizeof( array[0] ) )
 

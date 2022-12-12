@@ -5,14 +5,14 @@
 #ifdef DEBUG_TARGET
     #define FW_VERSION_MAJOR   1
     #define FW_VERSION_MINOR   0
-    #define FW_VERSION_BUILD   141
+    #define FW_VERSION_BUILD   156
     #define FW_VERSION_RC      'D'
 
-    #define FW_TIME_HOUR       23
-    #define FW_TIME_MINUTES    22
-    #define FW_TIME_SECONDS    48
+    #define FW_TIME_HOUR       22
+    #define FW_TIME_MINUTES    31
+    #define FW_TIME_SECONDS    53
 
-    #define FW_DATE_DAY        5
+    #define FW_DATE_DAY        12
     #define FW_DATE_MONTH      11
     #define FW_DATE_YEAR       2022
 #else

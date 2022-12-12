@@ -16,16 +16,16 @@
 ##### Каналы обмена данными:
 * RS-485 (Modbus Slave);
 * CAN;
-* Zigbee.
+* Zigbee (СС2530).
 ---
 
 ##### Описание функционала:
-* Подсчет расхода воды выполняется по трем отдельным каналам (холодная, горяча и питьевая вода). Для каждого канала, в настройках, задается значение инкремента при подсчете расхода воды от импульсного выхода счетчика, тип импульсного выхода: «сухой контакт»;
-* Контроль утечки воды выполняется по двум отдельным каналам с помощью датчиков типа: Neptun SW003 или аналогичных. Питание датчиков осуществляется от встроенного, гальванически изолированного, источника питания постоянного тока 12В. При срабатывании датчиков утечки происходит автоматическое перекрытие воды и передача сообщения координатору сети. Восстановление подачи воды выполняется с помощью кнопок ручного управления или командами от основного контроллера;
+* Подсчет расхода воды выполняется по трем отдельным каналам (холодная, горячая и питьевая вода). Для каждого канала, в настройках, задается значение инкремента при подсчете расхода воды от импульсного выхода счетчика, тип импульсного выхода: «сухой контакт»;
+* Контроль утечки воды выполняется по двум отдельным каналам с помощью датчиков типа: [Neptun SW003](Doc/Neptun_SW003.jpg) или аналогичных. Питание датчиков осуществляется от встроенного, гальванически изолированного, источника питания постоянного тока 12В. При срабатывании датчиков утечки происходит автоматическое перекрытие воды и передача сообщения координатору сети. Восстановление подачи воды выполняется с помощью кнопок ручного управления или командами от основного контроллера;
 * Контроль давления воды выполняется по двум каналам (холодная, горяча вода). Для измерения давления необходимо использовать датчик избыточного (относительного) давления с напряжением питания 5В и аналоговым выходом 0 – 5В. Есть возможность установки минимального и максимального выходного напряжения датчиков давления;
-* Два канала управление электроприводами типа: CR501 по пяти проводной схеме подключения;
+* Два канала управление электроприводами типа: [CR501](Doc/CR501-1.jpg) по пяти проводной схеме подключения;
 * Хранение показаний текущего расхода воды и журнала событий выполняется в энергонезависимой памяти типа FRAM (Ferroelectric RAM);
-* В журнале событий записываются ежесуточные показания счетчиков и дата/время обнаружения события утечки воды. В журнале могут хранится до 63 событий (возможно увеличение глубины хранения). Доступ к событиям в журнале выполнятся с сортировкой по убыванию дата + время события;
+* В журнале событий записываются ежесуточные показания счетчиков и дата/время обнаружения события утечки воды. В журнале могут храниться до 63 событий (возможно увеличение глубины хранения). Доступ к событиям в журнале выполнятся с сортировкой по убыванию дата + время события;
 * Настройка параметров контроллера выполняется с помощью консольных команд, интерфейс обмена: RS-232. Для подключения контроллера к ПК необходим конвертер уровней сигналов RS-232/TTL. Скорость обмена по умолчанию: 115200 (8N1);
 * CAN интерфейс может быть сконфигурирован для 11 и 29 адресации, доступные скорости обмена: 10,20,50,125,250,500 (kbit/s). Перечень доступных регистров [тут](Doc/can_data.pdf);
 * Modbus интерфейс может быть сконфигурирован под нужный адрес и скорость обмена (600 - 115200 baud). Перечень доступных регистров [тут](Doc/modbus_data.pdf);
@@ -41,6 +41,8 @@ dtime                           - Display date and time.
 valve [cold/hot opn/cls]        - Status, valve drive control.
 stat                            - Statistics.
 fram [N][clr/chk/test]          - FRAM HEX dump, clear, testing.
+task                            - List task statuses, time statistics.
+flash                           - FLASH config HEX dump.
 zb [res/init/net/save/cfg/chk]  - ZigBee module control.
 water [cold/hot/filter/log [N]] - Water flow status, setting initial values.
 config                          - Display of configuration parameters.
@@ -48,19 +50,20 @@ config save                     - Save configuration settings.
 config {cold/hot/filter} xxxxx  - Setting incremental values for water meters.
 config uart xxxxx               - Setting the speed baud (600 - 115200).
 config modbus speed xxxxx       - Setting the speed baud (600 - 115200).
-config modbus id xxxxx          - Setting the device ID on the modbus.
-config can id xxxxx             - Setting the Device ID on the CAN Bus.
+config modbus id 0x01 - 0xF8    - Setting the device ID on the modbus (HEX format without 0x).
+config can id 0xXXXXXXXX        - Setting the Device ID on the CAN Bus (HEX format without 0x).
 config can addr xxxxx           - Setting the width of the CAN bus identifier (11/29 bits).
 config can speed xxxxx          - Set the CAN bus speed 10,20,50,125,250,500 (kbit/s).
 config pres_max xxxxx           - Set the maximum pressure for the sensor.
 config pres_omin xxxxx          - Setting the minimum output voltage of the pressure sensor.
 config pres_omax xxxxx          - Setting the maximum output voltage of the pressure sensor.
-config panid 0x0000 - 0xFFFE    - Network PANID.
+config panid 0x0000 - 0xFFFE    - Network PANID (HEX format without 0x).
 config netgrp 1-99              - Network group number.
-config netkey XXXX....          - Network key.
-config devnumb 0x0001 - 0xFFFF  - Device number on the network.
-config gate 0x0000- 0xFFF8      - Gateway address.
+config netkey XXXX....          - Network key (HEX format without 0x).
+config devnumb 0x0001 - 0xFFFF  - Device number on the network (HEX format without 0x).
+config gate 0x0000- 0xFFF8      - Gateway address (HEX format without 0x).
 version                         - Displays the version number and date.
+reset                           - Reset controller.
 ?                               - Help.
 ```
 Примеры использования команд.
@@ -175,7 +178,7 @@ Kernel Information: .. FreeRTOS V10.0.1
 Kernel Version: ...... 10.0.1
 Kernel API Version: .. 10.0.1
 ```
-**valve** - вывод состояния (управление) актуаторами кранов подачи воды.
+**valve** - вывод состояния (управление) элктроприводами кранов подачи воды.
 ```plaintext
 Cold water tap drive status: .. UNDEF
 Cold water valve error: ....... OK
