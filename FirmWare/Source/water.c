@@ -22,6 +22,9 @@
 #include "xtime.h"
 #include "message.h"
 
+//#define DEBUG_WATER                                     //вывод отладочных событий
+//#define DEBUG_PRESSURE                                  //вывод отладочных значений давления
+
 //*************************************************************************************************
 // Внешние переменные
 //*************************************************************************************************
@@ -49,7 +52,7 @@ osEventFlagsId_t water_event = NULL;
 //*************************************************************************************************
 // Локальные переменные
 //*************************************************************************************************
-static char str[40];
+static char str[60];
 static CAN_DATA can_data;
 static uint16_t adc_data[2];
 static osTimerId_t timer1 = NULL;
@@ -120,7 +123,7 @@ static void TaskWater( void *pvParameters ) {
         if ( event & EVN_WTR_LEAK1 || event & EVN_WTR_LEAK2 ) {
             //события "утечка воды"
             SaveData( EVENT_ALARM );
-            #ifdef DEBUG_TARGET
+            #ifdef DEBUG_WATER
             if ( event & EVN_WTR_LEAK1 )
                 UartSendStr( "Water leak#1\r\n" );
             if ( event & EVN_WTR_LEAK2 )
@@ -276,15 +279,28 @@ static void WaterPressure( void ) {
 
     float coef_volt_pres;
     float prs_cold, prs_hot;
+    #ifdef DEBUG_PRESSURE
+    float prs_cold1, prs_hot1;
+    #endif
 
     //коэффициент коэффициента пересчета напряжения в давление
     coef_volt_pres = config.pressure_max / ( config.press_out_max - config.press_out_min );
-    //пересчет значений АЦП в напряжение, дипазон 3.3 вольт
+    //пересчет значений АЦП в напряжение, диапазон 3.3 вольт
     prs_cold = ( (float)adc_data[WATER_COLD] * VREF_VOLTAGE ) / ADC_MAX_VALUE; 
     prs_hot  = ( (float)adc_data[WATER_HOT] * VREF_VOLTAGE ) / ADC_MAX_VALUE; 
-    //пересчет в дипазон 5 вольт
+    #ifdef DEBUG_PRESSURE
+    prs_cold1 = prs_cold;
+    prs_hot1  = prs_hot;
+    #endif
+    //пересчет в диапазон 5 вольт
     prs_cold *= CONV_3V3_5V;
     prs_hot  *= CONV_3V3_5V;
+    #ifdef DEBUG_PRESSURE
+    sprintf( str, "ADC1: 0x%04X/%5.3f Vin: %5.3f\r\n", adc_data[WATER_COLD], prs_cold1, prs_cold );
+    UartSendStr( str );
+    sprintf( str, "ADC2: 0x%04X/%5.3f Vin: %5.3f\r\n\r\n", adc_data[WATER_HOT], prs_hot1, prs_hot );
+    UartSendStr( str );
+    #endif
     //проверка диапазона и пересчет в давление
     if ( prs_cold < config.press_out_min || prs_cold > config.press_out_max )
         prs_cold = 0;

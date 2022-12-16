@@ -5,8 +5,6 @@
 #include "config.h"
 #include "water.h"
 
-//#define DEBUG_FRAM                                      //вывод отладочной информации
-
 #define FRAM_SIZE           2048                        //размер FRAM памяти (байт)
 
 #define FRAM_ADDR_DATA      0x0000                      //адрес хранения текущих параметров расхода воды

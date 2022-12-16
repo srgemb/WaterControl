@@ -8,8 +8,6 @@
 #include "water.h"
 #include "valve.h"
 
-//#define DEBUG_ZIGBEE                        //вывод принятых/отправленных пакетов в HEX формате
-
 #define MAX_NETWORK_PANID           0xFFFE  //максимальный номер сети
 #define MAX_NETWORK_ADDR            0xFFF8  //максимальный адрес уст-ва в сети
 #define MAX_NETWORK_GROUP           99      //максимальный номер группы

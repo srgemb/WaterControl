@@ -36,7 +36,7 @@ extern UART_HandleTypeDef huart3;
 //*************************************************************************************************
 // Локальные переменные
 //*************************************************************************************************
-#ifdef MODBUS_DEBUG
+#ifdef DEBUG_MODBUS
 char str[80];
 #endif
 static char recv;
@@ -99,7 +99,7 @@ static void TaskModbus( void *pvParameters ) {
         if ( event & EVN_MODBUS_RECV ) {
             error = CheckRequest( recv_buff, recv_ind, &request );
             IncError( error );
-            #ifdef MODBUS_DEBUG
+            #ifdef DEBUG_MODBUS
             sprintf( str, "MODBUS: %s\r\n", ModBusErrDesc( error ) );
             UartSendStr( str );
             #endif

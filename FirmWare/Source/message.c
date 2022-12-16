@@ -21,7 +21,6 @@ const char msg_crlr[]       = "\r\n";
 const char msg_prompt[]     = "\r\n>";
 const char msg_ok[]         = "OK\r\n";
 const char msg_save[]       = "\r\nSaving parameters: ";
-const char msg_space[]      = "                    ";
 const char msg_no_command[] = "\r\nUnknown command.";
 const char msg_err_param[]  = "\r\nInvalid parameters.\r\n\r\n";
 const char msg_str_delim[]  = "----------------------------------------------------\r\n";

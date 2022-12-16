@@ -7,8 +7,6 @@
 
 #include "main.h"
 
-//#define DEBUG_VALVE                         //вывод отладочных событий
-
 //тип электропривода
 typedef enum {
     VALVE_COLD,                             //электропривод крана холодной воды
