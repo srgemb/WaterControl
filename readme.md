@@ -320,3 +320,7 @@ OK
 ![3D модель платы верх](Doc/pcb3d_top.PNG)
 
 ![3D модель платы низ](Doc/pcb3d_bottom.PNG)
+
+![Плата в сборе верх](Doc/bcp_mon_top.JPG)
+
+![Плата в сборе низ](Doc/bcp_mon_bot.JPG)
