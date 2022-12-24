@@ -382,11 +382,11 @@ static ErrorStatus RegWrite( MBUS_REQ *reqst ) {
     if ( reqst->reg_addr == MBUS_REG_CTRL ) {
         //проверка на закрытие горячей и холодной воды
         if ( write == MBUS_CMD_ALL_CLOSE ) {
-            osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS | EVN_VALVE_HOT_CLS | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS | EVN_VALVE_HOT_CLS );
             return SUCCESS; //высокий приоритет, дальше команды не проверяем
            }
         if ( write == MBUS_CMD_ALL_OPEN ) {
-            osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN | EVN_VALVE_HOT_OPN | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN | EVN_VALVE_HOT_OPN );
             return SUCCESS; //высокий приоритет, дальше команды не проверяем
            }
         //проверка на взаимоисключающие команды
@@ -396,13 +396,13 @@ static ErrorStatus RegWrite( MBUS_REQ *reqst ) {
             return ERROR;
         //выполнение команды
         if ( write & MBUS_CMD_COLD_OPEN )
-            osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN );
         if ( write & MBUS_CMD_COLD_CLOSE )
-            osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS );
         if ( write & MBUS_CMD_HOT_OPEN )
-            osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN );
         if ( write & MBUS_CMD_HOT_CLOSE )
-            osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS );
         return SUCCESS;
        }
     if ( reqst->reg_addr == MBUS_REG_DAYMON && reqst->reg_cnt == 3 ) {

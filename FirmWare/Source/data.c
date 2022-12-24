@@ -505,13 +505,13 @@ ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
         //управление электроприводами, отправка подтверждения выполняется из 
         //задачи TaskValve() после завершения работы электроприводов
         if ( zb_pack_ctrl.cold == VALVE_CTRL_OPEN )
-            osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN );
         if ( zb_pack_ctrl.cold == VALVE_CTRL_CLOSE )
-            osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS );
         if ( zb_pack_ctrl.hot == VALVE_CTRL_OPEN )
-            osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN );
         if ( zb_pack_ctrl.hot == VALVE_CTRL_CLOSE )
-            osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS );
         if ( zb_pack_ctrl.cold || zb_pack_ctrl.hot ) {
             ptr = str;
             ptr += sprintf( ptr, "Valve control " );

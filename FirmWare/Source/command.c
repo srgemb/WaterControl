@@ -66,7 +66,7 @@ static char * const state_name[] = {
 //*************************************************************************************************
 static const osThreadAttr_t task_attr = {
     .name = "Command", 
-    .stack_size = 768,
+    .stack_size = 832,
     .priority = osPriorityNormal
  };
 
@@ -618,9 +618,9 @@ static void CmndValve( uint8_t cnt_par, char *param ) {
         opn = strcasecmp( GetParamVal( IND_PARAM2 ), "opn" );
         cls = strcasecmp( GetParamVal( IND_PARAM2 ), "cls" );
         if ( !opn && cls )
-            osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN );
         if ( opn && !cls )
-            osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS );
         return;
        }
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "hot" ) ) {
@@ -628,9 +628,9 @@ static void CmndValve( uint8_t cnt_par, char *param ) {
         opn = strcasecmp( GetParamVal( IND_PARAM2 ), "opn" );
         cls = strcasecmp( GetParamVal( IND_PARAM2 ), "cls" );
         if ( !opn && cls )
-            osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN );
         if ( opn && !cls )
-            osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS | EVN_VALVE_PREV_CHECK );
+            osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS );
         return;
        }
     //вывод текущих состояний

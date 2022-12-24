@@ -36,6 +36,10 @@ osEventFlagsId_t valve_event = NULL;
 #define TIME_DELAY_CHK_OFF      15000       //задержка на проверку выключения привода
                                             //продолжительность работы (msec)
 
+#ifdef DEBUG_TARGET
+static char str[80];
+#endif
+
 //расшифровка состояния электропривода
 static char * const status_desc[] = { "UNDEF", "CLOSE", "OPEN" };
 
@@ -60,7 +64,7 @@ static ErrorStatus ValveCtrl( Valve valve, ValveCtrlMode ctrl );
 //*************************************************************************************************
 static const osThreadAttr_t task_attr = {
     .name = "Valve", 
-    .stack_size = 512,
+    .stack_size = 544,
     .priority = osPriorityNormal
  };
 
@@ -105,10 +109,10 @@ static void TaskValve( void *pvParameters ) {
         //**********************************************************************************
         if ( event & EVN_VALVE_COLD_KEY ) {
             #ifdef DEBUG_VALVE
-            UartSendStr( "EVN_VALVE_COLD_KEY\r\n" );
+            sprintf( str, "EVN_VALVE_COLD_KEY\r\n" );
+            UartSendStr( str );
             #endif
             evn_key = 0;
-            ValveSetError( VALVE_COLD, VALVE_OK ); //сброс ошибки
             vl_stat = ValveGetStatus( VALVE_COLD );
             //проверка состояния электропривода: открыт/закрыт
             if ( vl_stat == VALVE_CLOSE )
@@ -122,18 +126,8 @@ static void TaskValve( void *pvParameters ) {
         //события управления электроприводом холодной воды
         //**********************************************************************************
         if ( event & EVN_VALVE_COLD_OPN ) {
-            if ( event & EVN_VALVE_PREV_CHECK ) {
-                if ( ValveGetStatus( VALVE_COLD ) == VALVE_CLOSE ) {
-                    //окрытие крана холодной воды при условии что он закрыт
-                    if ( ValveCtrl( VALVE_COLD, VALVE_CTRL_OPEN ) == SUCCESS ) {
-                        //запуск таймеров проверки
-                        osTimerStart( timer1_chk, TIME_DELAY_CHK_PWR );
-                        osTimerStart( timer2_chk, TIME_DELAY_CHK_OFF );
-                       }
-                   }
-               }
-            else {
-                //окрытие крана холодной воды
+            if ( ValveGetStatus( VALVE_COLD ) != VALVE_OPEN ) {
+                //окрытие крана холодной воды при условии что он закрыт
                 if ( ValveCtrl( VALVE_COLD, VALVE_CTRL_OPEN ) == SUCCESS ) {
                     //запуск таймеров проверки
                     osTimerStart( timer1_chk, TIME_DELAY_CHK_PWR );
@@ -142,18 +136,8 @@ static void TaskValve( void *pvParameters ) {
                }
            }
         if ( event & EVN_VALVE_COLD_CLS ) {
-            if ( event & EVN_VALVE_PREV_CHECK ) {
-                if ( ValveGetStatus( VALVE_COLD ) == VALVE_OPEN ) {
-                    //закрытие крана холодной воды при условии что он открыт
-                    if ( ValveCtrl( VALVE_COLD, VALVE_CTRL_CLOSE ) == SUCCESS ) {
-                        //запуск таймеров проверки
-                        osTimerStart( timer1_chk, TIME_DELAY_CHK_PWR );
-                        osTimerStart( timer2_chk, TIME_DELAY_CHK_OFF );
-                       }
-                   }
-               }
-            else {
-                //закрытие крана холодной воды
+            if ( ValveGetStatus( VALVE_COLD ) != VALVE_CLOSE ) {
+                //закрытие крана холодной воды при условии что он открыт
                 if ( ValveCtrl( VALVE_COLD, VALVE_CTRL_CLOSE ) == SUCCESS ) {
                     //запуск таймеров проверки
                     osTimerStart( timer1_chk, TIME_DELAY_CHK_PWR );
@@ -175,12 +159,13 @@ static void TaskValve( void *pvParameters ) {
             if ( ValveGetCtrl( VALVE_COLD, VALVE_STAT_PWR ) == RESET ) {
                 //отсутствие тока в цепи 
                 osTimerStop( timer2_chk );
-                ValveCtrl( VALVE_COLD, VALVE_CTRL_STOP ); //выключаем управление
-                ValveSetError( VALVE_COLD, VALVE_NOPWR ); //установка ошибки
+                ValveCtrl( VALVE_COLD, VALVE_CTRL_STOP );    //выключаем управление
+                ValveSetError( VALVE_COLD, VALVE_NO_POWER ); //установка ошибки
                 //включение индикации
                 osEventFlagsSet( led_event, EVN_LED_COLD_OPN_BLK | EVN_LED_COLD_CLS_BLK );
                 #ifdef DEBUG_VALVE
-                UartSendStr( "No cold water drive current.\r\n" );
+                sprintf( str, "No cold water drive current.\r\n" );
+                UartSendStr( str );
                 #endif
                }
            }
@@ -193,7 +178,8 @@ static void TaskValve( void *pvParameters ) {
                 //включение индикации
                 osEventFlagsSet( led_event, EVN_LED_COLD_OPN_BLK | EVN_LED_COLD_CLS_BLK );
                 #ifdef DEBUG_VALVE
-                UartSendStr( "COLD WATER OVERTIME DRIVE\r\n" );
+                sprintf( str, "COLD WATER OVERTIME DRIVE\r\n" );
+                UartSendStr( str );
                 #endif
                }
            }
@@ -205,7 +191,8 @@ static void TaskValve( void *pvParameters ) {
             LedCtrl( VALVE_COLD ); //управление индикацией
             osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_VALVE ); //сообщение координатору сети
             #ifdef DEBUG_VALVE
-            UartSendStr( "COLD STOP\r\n" );
+            sprintf( str, "COLD STOP\r\n" );
+            UartSendStr( str );
             #endif
            }
         //**********************************************************************************
@@ -217,7 +204,8 @@ static void TaskValve( void *pvParameters ) {
             //включение индикации
             osEventFlagsSet( led_event, EVN_LED_COLD_OPN_BLK | EVN_LED_COLD_CLS_BLK );
             #ifdef DEBUG_VALVE
-            UartSendStr( "EVN_VALVE_COLD_OVR\r\n" );
+            sprintf( str, "EVN_VALVE_COLD_OVR\r\n" );
+            UartSendStr( str );
             #endif
            }
         
@@ -226,10 +214,10 @@ static void TaskValve( void *pvParameters ) {
         //**********************************************************************************
         if ( event & EVN_VALVE_HOT_KEY ) {
             #ifdef DEBUG_VALVE
-            UartSendStr( "EVN_VALVE_HOT_KEY\r\n" );
+            sprintf( str, "EVN_VALVE_HOT_KEY\r\n" );
+            UartSendStr( str );
             #endif
             evn_key = 0;
-            ValveSetError( VALVE_HOT, VALVE_OK ); //сброс ошибки 
             //проверка состояния крана: открыт/закрыт
             vl_stat = ValveGetStatus( VALVE_HOT );
             if ( vl_stat == VALVE_CLOSE )
@@ -243,18 +231,8 @@ static void TaskValve( void *pvParameters ) {
         //события управления электроприводом крана горячей воды
         //**********************************************************************************
         if ( event & EVN_VALVE_HOT_OPN ) {
-            if ( event & EVN_VALVE_PREV_CHECK ) {
-                if ( ValveGetStatus( VALVE_HOT ) == VALVE_CLOSE ) {
-                    //открытие крана горячей воды при условии что он закрыт
-                    if ( ValveCtrl( VALVE_HOT, VALVE_CTRL_OPEN ) == SUCCESS ) {
-                        //запуск таймеров проверки
-                        osTimerStart( timer3_chk, TIME_DELAY_CHK_PWR );
-                        osTimerStart( timer4_chk, TIME_DELAY_CHK_OFF );
-                       }
-                   }
-               }
-            else {
-                //закрытие крана горячей воды
+            if ( ValveGetStatus( VALVE_HOT ) != VALVE_OPEN ) {
+                //открытие крана горячей воды при условии что он закрыт
                 if ( ValveCtrl( VALVE_HOT, VALVE_CTRL_OPEN ) == SUCCESS ) {
                     //запуск таймеров проверки
                     osTimerStart( timer3_chk, TIME_DELAY_CHK_PWR );
@@ -263,18 +241,8 @@ static void TaskValve( void *pvParameters ) {
                }
            }
         if ( event & EVN_VALVE_HOT_CLS ) {
-            if ( event & EVN_VALVE_PREV_CHECK ) {
-                if ( ValveGetStatus( VALVE_HOT ) == VALVE_OPEN ) {
-                    //закрытие крана горячей воды при условии что он открыт
-                    if ( ValveCtrl( VALVE_HOT, VALVE_CTRL_CLOSE ) == SUCCESS ) {
-                        //запуск таймеров проверки
-                        osTimerStart( timer3_chk, TIME_DELAY_CHK_PWR );
-                        osTimerStart( timer4_chk, TIME_DELAY_CHK_OFF );
-                       }
-                   }
-               }
-            else {
-                //закрытие крана горячей воды
+            if ( ValveGetStatus( VALVE_HOT ) != VALVE_CLOSE ) {
+                //закрытие крана горячей воды при условии что он открыт
                 if ( ValveCtrl( VALVE_HOT, VALVE_CTRL_CLOSE ) == SUCCESS ) {
                     //запуск таймеров проверки
                     osTimerStart( timer3_chk, TIME_DELAY_CHK_PWR );
@@ -297,11 +265,12 @@ static void TaskValve( void *pvParameters ) {
                 //отсутствие тока в цепи привода 
                 osTimerStop( timer4_chk );
                 ValveCtrl( VALVE_HOT, VALVE_CTRL_STOP ); //выключаем управление
-                ValveSetError( VALVE_HOT, VALVE_NOPWR ); //установка ошибки
+                ValveSetError( VALVE_HOT, VALVE_NO_POWER ); //установка ошибки
                 //включение индикации
                 osEventFlagsSet( led_event, EVN_LED_HOT_OPN_BLK | EVN_LED_HOT_CLS_BLK );
                 #ifdef DEBUG_VALVE
-                UartSendStr( "No hot water drive current.\r\n" );
+                sprintf( str, "No hot water drive current.\r\n" );
+                UartSendStr( str );
                 #endif
                }
            }
@@ -314,7 +283,8 @@ static void TaskValve( void *pvParameters ) {
                 //включение индикации
                 osEventFlagsSet( led_event, EVN_LED_HOT_OPN_BLK | EVN_LED_HOT_CLS_BLK );
                 #ifdef DEBUG_VALVE
-                UartSendStr( "Exceeding the operating time of the hot water electric drive.\r\n" );
+                sprintf( str, "Exceeding the operating time of the hot water electric drive.\r\n" );
+                UartSendStr( str );
                 #endif
                }
            }
@@ -327,7 +297,8 @@ static void TaskValve( void *pvParameters ) {
             LedCtrl( VALVE_HOT ); //управление индикацией
             osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_VALVE ); //сообщение координатору сети
             #ifdef DEBUG_VALVE
-            UartSendStr( "HOT STOP\r\n" );
+            sprintf( str, "HOT STOP\r\n" );
+            UartSendStr( str );
             #endif
            }
         //**********************************************************************************
@@ -339,7 +310,8 @@ static void TaskValve( void *pvParameters ) {
             //включение индикации
             osEventFlagsSet( led_event, EVN_LED_HOT_OPN_BLK | EVN_LED_HOT_CLS_BLK );
             #ifdef DEBUG_VALVE
-            UartSendStr( "EVN_VALVE_HOT_OVR\r\n" );
+            sprintf( str, "EVN_VALVE_HOT_OVR\r\n" );
+            UartSendStr( str );
             #endif
            }
         }
@@ -378,21 +350,19 @@ static void Timer4Callback( void *arg ) {
  }
 
 //*************************************************************************************************
-// Фуникция управления электроприводами
+// Функция управления электроприводами
 // Управление выполняется при отсутствии ошибок привода, для возобновления 
 // управления необходимо сбросить код ошибки соответствующего привода
 //-------------------------------------------------------------------------------------------------
 // Valve valve      - тип электропривода: горячая/холодная вода
 // ValveMode ctrl   - режим управления: открыть/закрыть/стоп
-// return = ERROR   - управление не возможно, необходимо сбрость ошибку или тип привода не указан
+// return = ERROR   - тип привода не указан
 //        = SUCCESS - управление выполняется
 //*************************************************************************************************
 static ErrorStatus ValveCtrl( Valve valve, ValveCtrlMode ctrl ) {
 
     //электропривод холодной воды
     if ( valve == VALVE_COLD ) {
-        if ( valve_data.error_cold != VALVE_OK )
-            return ERROR;
         if ( ctrl == VALVE_CTRL_STOP ) {
             //выключить управление
             HAL_GPIO_WritePin( COLD_DIR_GPIO_Port, COLD_DIR_Pin, GPIO_PIN_RESET );
@@ -401,6 +371,7 @@ static ErrorStatus ValveCtrl( Valve valve, ValveCtrlMode ctrl ) {
            }
         if ( ctrl == VALVE_CTRL_OPEN ) {
             //открыть
+            ValveSetError( VALVE_COLD, VALVE_OK ); //сброс ошибки
             HAL_GPIO_WritePin( COLD_DIR_GPIO_Port, COLD_DIR_Pin, GPIO_PIN_SET );
             HAL_GPIO_WritePin( COLD_EN_GPIO_Port, COLD_EN_Pin, GPIO_PIN_SET );
             osEventFlagsSet( led_event, EVN_LED_COLD_OPN_BLK | EVN_LED_COLD_CLS_OFF );
@@ -408,6 +379,7 @@ static ErrorStatus ValveCtrl( Valve valve, ValveCtrlMode ctrl ) {
            }
         if ( ctrl == VALVE_CTRL_CLOSE ) {
             //закрыть
+            ValveSetError( VALVE_COLD, VALVE_OK ); //сброс ошибки
             HAL_GPIO_WritePin( COLD_DIR_GPIO_Port, COLD_DIR_Pin, GPIO_PIN_RESET );
             HAL_GPIO_WritePin( COLD_EN_GPIO_Port, COLD_EN_Pin, GPIO_PIN_SET );
             osEventFlagsSet( led_event, EVN_LED_COLD_CLS_BLK | EVN_LED_COLD_OPN_OFF );
@@ -417,8 +389,6 @@ static ErrorStatus ValveCtrl( Valve valve, ValveCtrlMode ctrl ) {
        }
     //электропривод горячей воды
     if ( valve == VALVE_HOT ) {
-        if ( valve_data.error_hot != VALVE_OK )
-            return ERROR;
         if ( ctrl == VALVE_CTRL_STOP ) {
             //выключить управление
             HAL_GPIO_WritePin( HOT_DIR_GPIO_Port, HOT_DIR_Pin, GPIO_PIN_RESET );
@@ -427,6 +397,7 @@ static ErrorStatus ValveCtrl( Valve valve, ValveCtrlMode ctrl ) {
            }
         if ( ctrl == VALVE_CTRL_OPEN ) {
             //открыть
+            ValveSetError( VALVE_HOT, VALVE_OK ); //сброс ошибки
             HAL_GPIO_WritePin( HOT_DIR_GPIO_Port, HOT_DIR_Pin, GPIO_PIN_RESET );
             HAL_GPIO_WritePin( HOT_EN_GPIO_Port, HOT_EN_Pin, GPIO_PIN_SET );
             osEventFlagsSet( led_event, EVN_LED_HOT_OPN_BLK | EVN_LED_HOT_CLS_OFF );
@@ -434,6 +405,7 @@ static ErrorStatus ValveCtrl( Valve valve, ValveCtrlMode ctrl ) {
            }
         if ( ctrl == VALVE_CTRL_CLOSE ) {
             //закрыть
+            ValveSetError( VALVE_HOT, VALVE_OK ); //сброс ошибки
             HAL_GPIO_WritePin( HOT_DIR_GPIO_Port, HOT_DIR_Pin, GPIO_PIN_SET );
             HAL_GPIO_WritePin( HOT_EN_GPIO_Port, HOT_EN_Pin, GPIO_PIN_SET );
             osEventFlagsSet( led_event, EVN_LED_HOT_CLS_BLK | EVN_LED_HOT_OPN_OFF );

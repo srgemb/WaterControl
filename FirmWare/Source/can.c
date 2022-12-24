@@ -117,13 +117,13 @@ static void TaskCanSend( void *argument );
 //*************************************************************************************************
 static const osThreadAttr_t task1_attr = {
     .name = "CanRecv", 
-    .stack_size = 384,
+    .stack_size = 448,
     .priority = osPriorityNormal
  };
 
 static const osThreadAttr_t task2_attr = {
     .name = "CanSend", 
-    .stack_size = 384,
+    .stack_size = 416,
     .priority = osPriorityNormal
  };
 
@@ -437,21 +437,21 @@ ErrorStatus CheckCanSpeed( uint32_t baud, CANSpeed *speed ) {
 static void CommandExec( CtrlCommand cmnd ) {
 
     if ( cmnd == CAN_CLOSE_ALL ) {
-        osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS | EVN_VALVE_PREV_CHECK );
-        osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS | EVN_VALVE_PREV_CHECK );
+        osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS );
+        osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS );
        }
     if ( cmnd == CAN_OPEN_ALL ) {
-        osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN | EVN_VALVE_PREV_CHECK );
-        osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN | EVN_VALVE_PREV_CHECK );
+        osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN );
+        osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN );
        }
     if ( cmnd == CAN_COLD_OPEN )
-        osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN | EVN_VALVE_PREV_CHECK );
+        osEventFlagsSet( valve_event, EVN_VALVE_COLD_OPN );
     if ( cmnd == CAN_COLD_CLOSE )
-        osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS | EVN_VALVE_PREV_CHECK );
+        osEventFlagsSet( valve_event, EVN_VALVE_COLD_CLS );
     if ( cmnd == CAN_HOT_OPEN )
-        osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN | EVN_VALVE_PREV_CHECK );
+        osEventFlagsSet( valve_event, EVN_VALVE_HOT_OPN );
     if ( cmnd == CAN_HOT_CLOSE )
-        osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS | EVN_VALVE_PREV_CHECK );
+        osEventFlagsSet( valve_event, EVN_VALVE_HOT_CLS );
  }
 
 //*************************************************************************************************

@@ -106,8 +106,6 @@ extern osEventFlagsId_t uart_event, fram_event, zb_flow, zb_ctrl;
 #define EVN_VALVE_COLD_KEY          0x00010000  //кнопка управления электроприводом холодной воды
 #define EVN_VALVE_HOT_KEY           0x00020000  //кнопка управления электроприводом горячей воды
 
-#define EVN_VALVE_PREV_CHECK        0x00080000  //предварительный контроль состояния электропривода 
-
 #define EVN_VALVE_MASK              ( EVN_VALVE_HOT_STOP | EVN_VALVE_COLD_STOP | \
                                     EVN_VALVE_HOT_OPN | EVN_VALVE_HOT_CLS | \
                                     EVN_VALVE_COLD_OPN | EVN_VALVE_COLD_CLS | \
@@ -115,7 +113,7 @@ extern osEventFlagsId_t uart_event, fram_event, zb_flow, zb_ctrl;
                                     EVN_VALVE_COLD_CHK1 | EVN_VALVE_COLD_CHK2 | \
                                     EVN_VALVE_COLD_PWR | EVN_VALVE_COLD_OVR | \
                                     EVN_VALVE_HOT_PWR | EVN_VALVE_HOT_OVR | \
-                                    EVN_VALVE_COLD_KEY | EVN_VALVE_HOT_KEY | EVN_VALVE_PREV_CHECK )
+                                    EVN_VALVE_COLD_KEY | EVN_VALVE_HOT_KEY )
 
 //*************************************************************************************************
 // Флаги событий управления обменом с модулем ZigBee

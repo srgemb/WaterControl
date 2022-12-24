@@ -37,7 +37,7 @@ typedef enum {
 typedef enum {
     VALVE_OK,                               //ок
     VALVE_OVR,                              //перегрузка
-    VALVE_NOPWR,                            //нет нагрузки в цепи
+    VALVE_NO_POWER,                         //нет нагрузки в цепи
     VALVE_TIMEOUT                           //превышение длительности работы 
                                             //нет подтверждения завершения работы привода
  } ValveError;
