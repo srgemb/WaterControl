@@ -61,7 +61,7 @@ static char * const error_descr[] = {
 //*************************************************************************************************
 // Локальные переменные
 //*************************************************************************************************
-#ifdef DEBUG_MODBUS
+#if defined( DEBUG_MODBUS ) && defined( DEBUG_TARGET )
 static char str[120];
 #endif
 static uint32_t recv_total, error_cnt[SIZE_ARRAY( error_descr )]; //счетчики ошибок протокола
@@ -183,7 +183,7 @@ ModBusError CheckRequest( uint8_t *data, uint8_t len, MBUS_REQ *request ) {
         if ( RegWrite( request ) == ERROR )
             return MBUS_ERROR_DATA;
        }
-    #ifdef DEBUG_MODBUS
+    #if defined( DEBUG_MODBUS ) && defined( DEBUG_TARGET )
     sprintf( str, "DEV: 0x%02X FUCT: 0x%02X ADDR: 0x%04X-0x%04X CNT: %d\r\n", request->dev_addr, request->function, request->reg_addr, 
             request->reg_addr + request->reg_cnt - 1, request->reg_cnt );
     UartSendStr( str );

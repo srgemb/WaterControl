@@ -24,7 +24,7 @@
 #include "xtime.h"
 #include "zigbee.h"
 
-//#define DEBUG_ZIGBEE                        //вывод принятых/отправленных пакетов в HEX формате
+#define DEBUG_ZIGBEE                        //вывод принятых/отправленных пакетов в HEX формате
 
 //*************************************************************************************************
 // Внешние переменные
@@ -104,7 +104,7 @@ static char * const nwk_state[] = {
     "No network", "Network exists"
  };
 
-#ifdef DEBUG_ZIGBEE 
+#if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
 static char * const desc_answer[] = {
     "ANSWER_ERROR", 
     "ANSWER_BLD_NET", 
@@ -130,7 +130,7 @@ static ZBErrorState Command( void *ptr );
 // Локальные переменные
 //*************************************************************************************************
 static char str[100];
-#ifdef DEBUG_ZIGBEE
+#if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
 static char str2[180];
 #endif
 static bool time_out = false;
@@ -188,7 +188,7 @@ static char *DevType( ZBDevType dev );
 static char *NwkState( ZBNetState state );
 static char *TxPower( ZBTxPower id_pwr );
 
-#ifdef DEBUG_ZIGBEE
+#if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
 static void SendDebug( char type, uint8_t *data, uint8_t len );
 static char *AnswDesc( ZBAnswer id_answ );
 #endif
@@ -383,7 +383,7 @@ static void TaskZBFlow( void *pvParameters ) {
             //ZB_ANSWER_JOIN_NET, ZB_ANSWER_BLD_NET, ZB_ANSWER_NO_NET
             if ( CheckSysAnswer( recv_buff, recv_ind ) == SUCCESS ) {
                 ClearRecv();
-                #ifdef DEBUG_ZIGBEE
+                #if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
                 UartSendStr( "Answer SYS OK\r\n" );
                 osEventFlagsSet( cmnd_event, EVN_CMND_PROMPT );
                 #endif
@@ -394,12 +394,12 @@ static void TaskZBFlow( void *pvParameters ) {
                     if ( CheckPack( recv_buff, recv_ind ) == SUCCESS ) {
                         //отправка на обработку в TaskZBCtrl()
                         recv_cnt++;
-                        #ifdef DEBUG_ZIGBEE
+                        #if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
                         UartSendStr( "CheckPack Success\r\n" );
                         osEventFlagsSet( cmnd_event, EVN_CMND_PROMPT );
                         #endif
                        }
-                    #ifdef DEBUG_ZIGBEE
+                    #if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
                     else {
                         UartSendStr( "CheckPack Error\r\n" );
                         osEventFlagsSet( cmnd_event, EVN_CMND_PROMPT );
@@ -410,7 +410,7 @@ static void TaskZBFlow( void *pvParameters ) {
                 //переход на обработку ответа в SendData()/CheckRecv()
                 else {
                     osSemaphoreRelease( sem_ans ); 
-                    #ifdef DEBUG_ZIGBEE
+                    #if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
                     UartSendStr( "SemaphoreRelease SEM_ANS +\r\n" );
                     osEventFlagsSet( cmnd_event, EVN_CMND_PROMPT );
                     #endif
@@ -672,7 +672,7 @@ static ZBErrorState SendData( ZBCmnd cmnd, uint8_t *data, uint8_t len, uint16_t 
     //копируем в буфер данные
     memset( send_buff, 0x00, sizeof( send_buff ) );
     memcpy( send_buff, data, len );
-    #ifdef DEBUG_ZIGBEE
+    #if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
     SendDebug( 'S', send_buff, len );
     #endif
     ClearRecv();
@@ -752,7 +752,7 @@ static ErrorStatus CheckSysAnswer( uint8_t *answer, uint8_t len ) {
 
     ZBAnswer answ;
 
-    #ifdef DEBUG_ZIGBEE
+    #if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
     SendDebug( 'R', answer, len );
     #endif
     //идентификация ответа
@@ -794,7 +794,7 @@ static ZBAnswer CheckAnswer( uint8_t *answer, uint8_t len ) {
         if ( len != sizeof( zb_answr[ind].code_answer ) )
             continue; //сравнивать только ответ заданной длины
         if ( memcmp( answer, zb_answr[ind].code_answer, sizeof( zb_answr[ind].code_answer ) ) == 0 ) {
-            #ifdef DEBUG_ZIGBEE
+            #if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
             sprintf( str, "CheckAnswer: %s\r\n", AnswDesc( ind ) );
             UartSendStr( str );
             osEventFlagsSet( cmnd_event, EVN_CMND_PROMPT );
@@ -811,7 +811,7 @@ static ZBAnswer CheckAnswer( uint8_t *answer, uint8_t len ) {
         //КС считаем без полученной КС и net_addr (net_addr не входит в подсчет КС)
         crc = CalcCRC16( (uint8_t *)&ack, sizeof( ack ) - ( sizeof( uint16_t ) * 2 ) );
         if ( ack.crc != crc ) {
-            #ifdef DEBUG_ZIGBEE 
+            #if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
             UartSendStr( "CheckAnswer ACK CRC error\r\n" );
             osEventFlagsSet( cmnd_event, EVN_CMND_PROMPT );
             #endif
@@ -959,7 +959,7 @@ void ZBConfig( void ) {
 // uint8_t *data    - указатель на передаваемые данные пакета
 // uint8_t len_send - размер передаваемых данных
 //*************************************************************************************************
-#ifdef DEBUG_ZIGBEE
+#if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
 static void SendDebug( char type, uint8_t *data, uint8_t len ) {
 
     uint8_t i;
@@ -1053,7 +1053,7 @@ static char *NwkState( ZBNetState state ) {
 // ZBAnswer id_answ - идентификатор сообщения
 // return = NULL    - идентификтор не определен, иначе указатель на строку
 //*************************************************************************************************
-#ifdef DEBUG_ZIGBEE
+#if defined( DEBUG_ZIGBEE ) && defined( DEBUG_TARGET )
 static char *AnswDesc( ZBAnswer id_answ ) {
 
     if ( id_answ < SIZE_ARRAY( desc_answer ) )

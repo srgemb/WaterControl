@@ -123,7 +123,7 @@ static void TaskWater( void *pvParameters ) {
         if ( event & EVN_WTR_LEAK1 || event & EVN_WTR_LEAK2 ) {
             //события "утечка воды"
             SaveData( EVENT_ALARM );
-            #ifdef DEBUG_WATER
+            #if defined( DEBUG_WATER ) && defined( DEBUG_TARGET )
             if ( event & EVN_WTR_LEAK1 )
                 UartSendStr( "Water leak#1\r\n" );
             if ( event & EVN_WTR_LEAK2 )
@@ -279,7 +279,7 @@ static void WaterPressure( void ) {
 
     float coef_volt_pres;
     float prs_cold, prs_hot;
-    #ifdef DEBUG_PRESSURE
+    #if defined( DEBUG_PRESSURE ) && defined( DEBUG_TARGET )
     float prs_cold1, prs_hot1;
     #endif
 
@@ -288,14 +288,14 @@ static void WaterPressure( void ) {
     //пересчет значений АЦП в напряжение, диапазон 3.3 вольт
     prs_cold = ( (float)adc_data[WATER_COLD] * VREF_VOLTAGE ) / ADC_MAX_VALUE; 
     prs_hot  = ( (float)adc_data[WATER_HOT] * VREF_VOLTAGE ) / ADC_MAX_VALUE; 
-    #ifdef DEBUG_PRESSURE
+    #if defined( DEBUG_PRESSURE ) && defined( DEBUG_TARGET )
     prs_cold1 = prs_cold;
     prs_hot1  = prs_hot;
     #endif
     //пересчет в диапазон 5 вольт
     prs_cold *= CONV_3V3_5V;
     prs_hot  *= CONV_3V3_5V;
-    #ifdef DEBUG_PRESSURE
+    #if defined( DEBUG_PRESSURE ) && defined( DEBUG_TARGET )
     sprintf( str, "ADC1: 0x%04X/%5.3f Vin: %5.3f\r\n", adc_data[WATER_COLD], prs_cold1, prs_cold );
     UartSendStr( str );
     sprintf( str, "ADC2: 0x%04X/%5.3f Vin: %5.3f\r\n\r\n", adc_data[WATER_HOT], prs_hot1, prs_hot );

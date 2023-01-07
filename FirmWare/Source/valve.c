@@ -36,7 +36,7 @@ osEventFlagsId_t valve_event = NULL;
 #define TIME_DELAY_CHK_OFF      15000       //задержка на проверку выключения привода
                                             //продолжительность работы (msec)
 
-#ifdef DEBUG_TARGET
+#if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
 static char str[80];
 #endif
 
@@ -108,7 +108,7 @@ static void TaskValve( void *pvParameters ) {
         //управления электроприводом холодной воды от внешних кнопок
         //**********************************************************************************
         if ( event & EVN_VALVE_COLD_KEY ) {
-            #ifdef DEBUG_VALVE
+            #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
             sprintf( str, "EVN_VALVE_COLD_KEY\r\n" );
             UartSendStr( str );
             #endif
@@ -163,7 +163,7 @@ static void TaskValve( void *pvParameters ) {
                 ValveSetError( VALVE_COLD, VALVE_NO_POWER ); //установка ошибки
                 //включение индикации
                 osEventFlagsSet( led_event, EVN_LED_COLD_OPN_BLK | EVN_LED_COLD_CLS_BLK );
-                #ifdef DEBUG_VALVE
+                #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
                 sprintf( str, "No cold water drive current.\r\n" );
                 UartSendStr( str );
                 #endif
@@ -177,7 +177,7 @@ static void TaskValve( void *pvParameters ) {
                 ValveSetError( VALVE_COLD, VALVE_TIMEOUT ); //установка ошибки
                 //включение индикации
                 osEventFlagsSet( led_event, EVN_LED_COLD_OPN_BLK | EVN_LED_COLD_CLS_BLK );
-                #ifdef DEBUG_VALVE
+                #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
                 sprintf( str, "COLD WATER OVERTIME DRIVE\r\n" );
                 UartSendStr( str );
                 #endif
@@ -190,7 +190,7 @@ static void TaskValve( void *pvParameters ) {
             ValveCtrl( VALVE_COLD, VALVE_CTRL_STOP ); //выключаем управление
             LedCtrl( VALVE_COLD ); //управление индикацией
             osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_VALVE ); //сообщение координатору сети
-            #ifdef DEBUG_VALVE
+            #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
             sprintf( str, "COLD STOP\r\n" );
             UartSendStr( str );
             #endif
@@ -203,7 +203,7 @@ static void TaskValve( void *pvParameters ) {
             ValveSetError( VALVE_COLD, VALVE_OVR );   //установка ошибки
             //включение индикации
             osEventFlagsSet( led_event, EVN_LED_COLD_OPN_BLK | EVN_LED_COLD_CLS_BLK );
-            #ifdef DEBUG_VALVE
+            #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
             sprintf( str, "EVN_VALVE_COLD_OVR\r\n" );
             UartSendStr( str );
             #endif
@@ -213,7 +213,7 @@ static void TaskValve( void *pvParameters ) {
         //управления электроприводом горячей воды от внешних кнопок
         //**********************************************************************************
         if ( event & EVN_VALVE_HOT_KEY ) {
-            #ifdef DEBUG_VALVE
+            #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
             sprintf( str, "EVN_VALVE_HOT_KEY\r\n" );
             UartSendStr( str );
             #endif
@@ -268,7 +268,7 @@ static void TaskValve( void *pvParameters ) {
                 ValveSetError( VALVE_HOT, VALVE_NO_POWER ); //установка ошибки
                 //включение индикации
                 osEventFlagsSet( led_event, EVN_LED_HOT_OPN_BLK | EVN_LED_HOT_CLS_BLK );
-                #ifdef DEBUG_VALVE
+                #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
                 sprintf( str, "No hot water drive current.\r\n" );
                 UartSendStr( str );
                 #endif
@@ -282,7 +282,7 @@ static void TaskValve( void *pvParameters ) {
                 ValveSetError( VALVE_HOT, VALVE_TIMEOUT ); //установка ошибки
                 //включение индикации
                 osEventFlagsSet( led_event, EVN_LED_HOT_OPN_BLK | EVN_LED_HOT_CLS_BLK );
-                #ifdef DEBUG_VALVE
+                #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
                 sprintf( str, "Exceeding the operating time of the hot water electric drive.\r\n" );
                 UartSendStr( str );
                 #endif
@@ -296,7 +296,7 @@ static void TaskValve( void *pvParameters ) {
             //управление индикацией
             LedCtrl( VALVE_HOT ); //управление индикацией
             osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_VALVE ); //сообщение координатору сети
-            #ifdef DEBUG_VALVE
+            #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
             sprintf( str, "HOT STOP\r\n" );
             UartSendStr( str );
             #endif
@@ -309,7 +309,7 @@ static void TaskValve( void *pvParameters ) {
             ValveSetError( VALVE_HOT, VALVE_OVR );   //установка ошибки
             //включение индикации
             osEventFlagsSet( led_event, EVN_LED_HOT_OPN_BLK | EVN_LED_HOT_CLS_BLK );
-            #ifdef DEBUG_VALVE
+            #if defined( DEBUG_VALVE ) && defined( DEBUG_TARGET )
             sprintf( str, "EVN_VALVE_HOT_OVR\r\n" );
             UartSendStr( str );
             #endif

@@ -215,7 +215,7 @@ FramStatus FramSaveData( TypeData type, uint8_t *ptr_data, uint16_t len ) {
     if ( type == CURRENT_DATA )
         addr = FRAM_ADDR_DATA;
     else addr = curr_data.next_addr;
-    #ifdef DEBUG_FRAM
+    #if defined( DEBUG_FRAM ) && defined( DEBUG_TARGET )
     sprintf( buffer1, "Record current data at: 0x%04X ", addr );
     UartSendStr( buffer1 );
     #endif
