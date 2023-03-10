@@ -98,8 +98,8 @@ void HAL_RTCEx_RTCEventCallback( RTC_HandleTypeDef *hrtc ) {
     GetTimeDate( &date_time );
     //отправка события "запись в журнал суточных данных"
     osEventFlagsSet( water_event, EVN_WTR_LOG );
-    //отправка состояние контроллера координатору сети каждые 15 минут
-    if ( date_time.sec == 0 && date_time.min % 15 == 0 )
+    //отправка состояние контроллера координатору сети каждые 5 минут
+    if ( date_time.sec == 0 && date_time.min % 5 == 0 )
         osEventFlagsSet( zb_ctrl, EVN_ZC_IM_HERE );
  }
 
