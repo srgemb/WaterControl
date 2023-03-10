@@ -11,7 +11,7 @@
 #define MAX_NETWORK_PANID           0xFFFE  //максимальный номер сети
 #define MAX_NETWORK_ADDR            0xFFF8  //максимальный адрес уст-ва в сети
 #define MAX_NETWORK_GROUP           99      //максимальный номер группы
-#define MAX_DEVICE_NUMB             0xFFFF  //максимальный номер уст-ва в сети
+#define MAX_DEVICE_NUMB             65535   //максимальный номер уст-ва в сети
 
 //Зарезервированные адреса для трансляции
 #define BROADCAST_ALL_DEV           0xFFFE  //передача для всех уст-в в сети

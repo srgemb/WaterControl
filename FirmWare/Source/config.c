@@ -89,7 +89,7 @@ void ConfigInit( void ) {
         config.net_pan_id = 0x0001;                 //Personal Area Network ID – идентификатор сети
         config.net_group = 1;                       //номер группы
         memcpy( config.net_key, key, sizeof( config.net_key ) ); //ключ шифрования
-        config.dev_numb = 0x0001;                   //адрес уст-ва в сети (логический номер уст-ва)
+        config.dev_numb = 1;                        //адрес уст-ва в сети (логический номер уст-ва)
         config.addr_gate = 0x0000;                  //адрес шлюза с сети
         flash_read = ERROR;
        }

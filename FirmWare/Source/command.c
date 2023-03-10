@@ -436,15 +436,12 @@ static void CmndConfig( uint8_t cnt_par, char *param ) {
            }
         else UartSendStr( (char *)msg_err_param );
        }
-    //номер устройства в сети
+    //номер устройства в сети 1 - 65535
     if ( cnt_par == 3 && !strcasecmp( GetParamVal( IND_PARAM1 ), "devnumb" ) ) {
-        if ( StrHexToBin( GetParamVal( IND_PARAM2 ), (uint8_t *)&value.val_uint16, sizeof( value.val_uint16 ) ) == SUCCESS ) {
-            if ( value.val_uint16 && value.val_uint16 <= MAX_DEVICE_NUMB ) {
-                change = true;
-                memcpy( (uint8_t *)&config.dev_numb, (uint8_t *)&value.val_uint16, sizeof( config.dev_numb ) );
-                config.dev_numb = __REVSH( config.dev_numb );
-               }
-            else UartSendStr( (char *)msg_err_param );
+        value.val_uint16 = atoi( GetParamVal( IND_PARAM2 ) );
+        if ( value.val_uint16 && value.val_uint16 <= MAX_DEVICE_NUMB ) {
+            change = true;
+            config.dev_numb = value.val_uint16;
            }
         else UartSendStr( (char *)msg_err_param );
        }
@@ -526,7 +523,7 @@ static void CmndConfig( uint8_t cnt_par, char *param ) {
         ptr += sprintf( ptr, "%02X", config.net_key[ind] );
     ptr += sprintf( ptr, "\r\n" );
     UartSendStr( buffer );
-    sprintf( buffer, "Device number on the network: ....... 0x%04X\r\n", config.dev_numb );
+    sprintf( buffer, "Device number on the network: ....... %05u\r\n", config.dev_numb );
     UartSendStr( buffer );
     sprintf( buffer, "Gateway address: .................... 0x%04X\r\n", config.addr_gate );
     UartSendStr( buffer );
