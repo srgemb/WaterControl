@@ -444,7 +444,8 @@ ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
     type = (ZBTypePack)*data;
     osEventFlagsSet( led_event, EVN_LED_ZB_ACTIVE );
     addr_dev = __REVSH( *((uint16_t *)&zb_cfg.short_addr) );
-    if ( ( type == ZB_PACK_REQ_STATE || type == ZB_PACK_REQ_DATA ) && len == sizeof( ZB_PACK_REQ ) ) {
+    if ( ( type == ZB_PACK_REQ_STATE || type == ZB_PACK_REQ_DATA || type == ZB_PACK_REQ_VALVE ) && len == sizeof( ZB_PACK_REQ ) ) {
+        //отправка данных координатору
         //запрос текущего состояния контроллера
         //запрос текущих данных расхода/давления/утечки воды
         //запрос журнальных данных расхода/давления/утечки воды
@@ -463,13 +464,19 @@ ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
             ZBIncError( ZB_ERROR_NUMB );
             return ERROR;
            }
+        //текущее состояние электроприводов подачи воды
+        if ( type == ZB_PACK_REQ_VALVE )
+            osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_VALVE );
+        //текущее состояние контроллера
         if ( type == ZB_PACK_REQ_STATE )
-            osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_STATE ); //текущего состояния контроллера
+            osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_STATE );
+        //текущие данные расхода/давления/утечки воды
         if ( type == ZB_PACK_REQ_DATA && !zb_pack_req.count_log )
-            osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_DATA ); //текущих данных расхода/давления/утечки воды
+            osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_DATA );
+        //журнальные данные расхода/давления/утечки воды
         if ( type == ZB_PACK_REQ_DATA && zb_pack_req.count_log ) {
             if ( CreateData( zb_pack_req.count_log ) )
-                osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_WLOG ); //журнальные данные расхода/давления/утечки воды
+                osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_WLOG );
            }
         return SUCCESS;
        }
