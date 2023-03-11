@@ -45,9 +45,17 @@ typedef enum {
 #pragma pack( push, 1 )
 
 typedef struct {
-    ValveError error_cold : 4;              //ошибка электропривода холодной воды
-    ValveError error_hot  : 4;              //ошибка электропривода горячей воды
+    ValveError  error_cold : 4;             //ошибка электропривода холодной воды
+    ValveError  error_hot  : 4;             //ошибка электропривода горячей воды
  } VALVE;
+ 
+//Структура данных для хранения списка уст-в и их адресов
+typedef struct {
+    ValveStat   stat_valve_cold  : 2;       //статус электропривода холодный воды    
+    ValveError  error_valve_cold : 2;       //код ошибки электропривода холодный воды
+    ValveStat   stat_valve_hot : 2;         //статус электропривода горячей воды     
+    ValveError  error_valve_hot : 2;        //код ошибки электропривода горячей воды 
+} VALVE_STAT_ERR;
 
 #pragma pack( pop )
 

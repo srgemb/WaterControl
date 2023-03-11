@@ -70,10 +70,10 @@ uint8_t *GetDataCan1( uint8_t *size ) {
 
     *size = sizeof( data_leak );
     memset( (uint8_t *)&data_leak, 0x00, sizeof( data_leak ) );
-    data_leak.stat_valve_cold = ValveGetStatus( VALVE_COLD );
-    data_leak.error_valve_cold = valve_data.error_cold;
-    data_leak.stat_valve_hot = ValveGetStatus( VALVE_HOT );
-    data_leak.error_valve_hot = valve_data.error_cold;
+    data_leak.valve_stat.stat_valve_cold = ValveGetStatus( VALVE_COLD );
+    data_leak.valve_stat.error_valve_cold = valve_data.error_cold;
+    data_leak.valve_stat.stat_valve_hot = ValveGetStatus( VALVE_HOT );
+    data_leak.valve_stat.error_valve_hot = valve_data.error_cold;
     data_leak.leak1 = LeakStatus( LEAK1 );
     data_leak.leak2 = LeakStatus( LEAK2 );
     data_leak.dc12_chk = DC12VStatus();
@@ -217,10 +217,10 @@ uint8_t *GetDataMbus( uint16_t reg_id, uint16_t reg_cnt, uint8_t *bytes ) {
     
     if ( reg_cnt && reg_id == MBUS_REG_CTRL ) {
         //состояния датчиков утечки и состояния электроприводов
-        data_leak.stat_valve_cold = ValveGetStatus( VALVE_COLD );
-        data_leak.error_valve_cold = valve_data.error_cold;
-        data_leak.stat_valve_hot = ValveGetStatus( VALVE_HOT );
-        data_leak.error_valve_hot = valve_data.error_cold;
+        data_leak.valve_stat.stat_valve_cold = ValveGetStatus( VALVE_COLD );
+        data_leak.valve_stat.error_valve_cold = valve_data.error_cold;
+        data_leak.valve_stat.stat_valve_hot = ValveGetStatus( VALVE_HOT );
+        data_leak.valve_stat.error_valve_hot = valve_data.error_cold;
         data_leak.leak1 = LeakStatus( LEAK1 );
         data_leak.leak2 = LeakStatus( LEAK2 );
         data_leak.dc12_chk = DC12VStatus();
@@ -351,10 +351,10 @@ uint8_t *CreatePack( ZBTypePack type, uint8_t *len ) {
         pack_data.type_event = EVENT_DATA;                                  //признак данных: данные/событие
         pack_data.dc12_chk = DC12VStatus();                                 //контроль напряжения 12VDc для питания датчиков утечки
         //состояния электроприводов кранов      
-        pack_data.stat_valve_cold = ValveGetStatus( VALVE_COLD );           //статус крана холодный воды    
-        pack_data.error_valve_cold = valve_data.error_cold;                 //код ошибки крана холодный воды
-        pack_data.stat_valve_hot = ValveGetStatus( VALVE_HOT );             //статус крана горячей воды     
-        pack_data.error_valve_hot = valve_data.error_hot;                   //код ошибки крана горячей воды 
+        pack_data.valve_stat.stat_valve_cold = ValveGetStatus( VALVE_COLD ); //статус крана холодный воды    
+        pack_data.valve_stat.error_valve_cold = valve_data.error_cold;       //код ошибки крана холодный воды
+        pack_data.valve_stat.stat_valve_hot = ValveGetStatus( VALVE_HOT );   //статус крана горячей воды     
+        pack_data.valve_stat.error_valve_hot = valve_data.error_hot;         //код ошибки крана горячей воды 
         //контрольная сумма
         pack_data.crc = CalcCRC16( (uint8_t *)&pack_data, sizeof( pack_data ) - sizeof( pack_state.crc ) );
         *len = sizeof( pack_data );
@@ -385,10 +385,10 @@ uint8_t *CreatePack( ZBTypePack type, uint8_t *len ) {
         pack_data.type_event = wtr_log.type_event;                          //признак данных: данные/событие
         pack_data.dc12_chk = wtr_log.dc12_chk;                              //контроль напряжения 12VDc для питания датчиков утечки
         //состояния электроприводов      
-        pack_data.stat_valve_cold = wtr_log.stat_valve_cold;                //статус крана холодный воды    
-        pack_data.error_valve_cold = wtr_log.error_valve_cold;              //код ошибки крана холодный воды
-        pack_data.stat_valve_hot = wtr_log.stat_valve_hot;                  //статус крана горячей воды     
-        pack_data.error_valve_hot = wtr_log.error_valve_hot;                //код ошибки крана горячей воды 
+        pack_data.valve_stat.stat_valve_cold = wtr_log.stat_valve_cold;     //статус крана холодный воды    
+        pack_data.valve_stat.error_valve_cold = wtr_log.error_valve_cold;   //код ошибки крана холодный воды
+        pack_data.valve_stat.stat_valve_hot = wtr_log.stat_valve_hot;       //статус крана горячей воды     
+        pack_data.valve_stat.error_valve_hot = wtr_log.error_valve_hot;     //код ошибки крана горячей воды 
         //контрольная сумма
         pack_data.crc = CalcCRC16( (uint8_t *)&pack_data, sizeof( pack_data ) - sizeof( pack_state.crc ) );
         *len = sizeof( pack_data );
@@ -400,10 +400,10 @@ uint8_t *CreatePack( ZBTypePack type, uint8_t *len ) {
         pack_valve.numb_dev = config.dev_numb;                              //номер уст-ва
         pack_valve.addr_dev = __REVSH( *((uint16_t *)&zb_cfg.short_addr) ); //адрес уст-ва в сети
         //состояния электроприводов      
-        pack_data.stat_valve_cold = ValveGetStatus( VALVE_COLD );           //статус крана холодный воды    
-        pack_data.error_valve_cold = valve_data.error_cold;                 //код ошибки крана холодный воды
-        pack_data.stat_valve_hot = ValveGetStatus( VALVE_HOT );             //статус крана горячей воды     
-        pack_data.error_valve_hot = valve_data.error_hot;                   //код ошибки крана горячей воды 
+        pack_valve.valve_stat.stat_valve_cold = ValveGetStatus( VALVE_COLD ); //статус крана холодный воды    
+        pack_valve.valve_stat.error_valve_cold = valve_data.error_cold;       //код ошибки крана холодный воды
+        pack_valve.valve_stat.stat_valve_hot = ValveGetStatus( VALVE_HOT );   //статус крана горячей воды     
+        pack_valve.valve_stat.error_valve_hot = valve_data.error_hot;         //код ошибки крана горячей воды 
         //контрольная сумма
         pack_valve.crc = CalcCRC16( (uint8_t *)&pack_valve, sizeof( pack_valve ) - sizeof( pack_valve.crc ) );
         *len = sizeof( pack_valve );
