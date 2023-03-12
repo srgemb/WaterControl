@@ -14,6 +14,7 @@
 
 #include "main.h"
 #include "data.h"
+#include "sort.h"
 #include "valve.h"
 #include "uart.h"
 #include "crc16.h"
@@ -255,11 +256,12 @@ void ZBInit( void ) {
 static void TaskZBCtrl( void *pvParameters ) {
 
     char *ptr;
+    uint16_t addr;
     int32_t event;
-    uint8_t *data, len, rec;
+    uint8_t *data, len, ind;
     ZBErrorState state;
     DATE_TIME *ptr_dtime;
-    ErrorStatus stat, rec_rdy;
+    ErrorStatus stat;
 
     //проверка конфигурации модуля ZigBee с задержкой после включения
     if ( !osTimerIsRunning( timer_chk ) )
@@ -287,7 +289,7 @@ static void TaskZBCtrl( void *pvParameters ) {
            }
         if ( event & EVN_ZC_SEND_STATE || event & EVN_ZC_IM_HERE ) {
             //данные состояния контроллера
-            data = CreatePack( ZB_PACK_STATE, &len );
+            data = CreatePack( ZB_PACK_STATE, &len, NULL );
             if ( data != NULL ) {
                 state = ZBSendPack( data, len, TIME_NOWAIT_ACK );
                 sprintf( str, "Send state: %s\r\n", ZBErrDesc( state ) );
@@ -297,7 +299,7 @@ static void TaskZBCtrl( void *pvParameters ) {
            }
         if ( event & EVN_ZC_SEND_DATA ) {
             //текущие данные расхода/давления/утечки воды
-            data = CreatePack( ZB_PACK_DATA, &len );
+            data = CreatePack( ZB_PACK_DATA, &len, NULL );
             if ( data != NULL ) {
                 state = ZBSendPack( data, len, TIME_NOWAIT_ACK );
                 sprintf( str, "Send data: %s\r\n", ZBErrDesc( state ) );
@@ -308,26 +310,26 @@ static void TaskZBCtrl( void *pvParameters ) {
         if ( event & EVN_ZC_SEND_WLOG ) {
             //журнальные данные расхода/давления/утечки воды
             while ( true ) {
-                //запрос данных
-                rec_rdy = GetAddrLog( rec );
-                if ( rec_rdy == ERROR )
-                    break;
-                //формируем пакет
-                data = CreatePack( ZB_PACK_WLOG, &len );
-                if ( data != NULL ) {
-                    state = ZBSendPack( data, len, TIME_WAIT_ACK );
-                    sprintf( str, "Send log data: %s\r\n", ZBErrDesc( state ) );
-                    UartSendStr( str );
-                    osEventFlagsSet( cmnd_event, EVN_CMND_PROMPT );
-                    if ( state != ZB_ERROR_OK )
-                        break;
+                ind = GetIndex(); //первый/следующий индекс данных
+                if ( ind ) {
+                    addr = GetAddrSort( ind-1 ); //запрос адреса данных
+                    //формируем пакет
+                    data = CreatePack( ZB_PACK_WLOG, &len, addr );
+                    if ( data != NULL ) {
+                        state = ZBSendPack( data, len, TIME_WAIT_ACK );
+                        sprintf( str, "Send log data %03u: %s\r\n", ind, ZBErrDesc( state ) );
+                        UartSendStr( str );
+                        if ( state != ZB_ERROR_OK )
+                            break;
+                       }
+                    else break;
                    }
                 else break;
                }
            }
         if ( event & EVN_ZC_SEND_VALVE ) {
             //состояние электроприводов
-            data = CreatePack( ZB_PACK_VALVE, &len );
+            data = CreatePack( ZB_PACK_VALVE, &len, NULL );
             if ( data != NULL ) {
                 state = ZBSendPack( data, len, TIME_NOWAIT_ACK );
                 sprintf( str, "Send valve status: %s\r\n", ZBErrDesc( state ) );
@@ -336,10 +338,10 @@ static void TaskZBCtrl( void *pvParameters ) {
                }
            }
         if ( event & EVN_ZC_SEND_LEAKS ) {
-            //состояние электроприводов
-            data = CreatePack( ZB_PACK_LEAKS, &len );
+            //состояние датчиков утечки
+            data = CreatePack( ZB_PACK_LEAKS, &len, NULL );
             if ( data != NULL ) {
-                state = ZBSendPack( data, len, TIME_WAIT_ACK );
+                state = ZBSendPack( data, len, TIME_NOWAIT_ACK );
                 sprintf( str, "Send status leaks: %s\r\n", ZBErrDesc( state ) );
                 UartSendStr( str );
                 osEventFlagsSet( cmnd_event, EVN_CMND_PROMPT );
@@ -807,7 +809,6 @@ static ZBAnswer CheckAnswer( uint8_t *answer, uint8_t len ) {
     if ( type == ZB_PACK_ACK && len == sizeof( ZB_PACK_ACK_DATA ) ) {
         //пакет подтверждения
         memcpy( (uint8_t *)&ack, answer, sizeof( ack ) );
-        //if ( ack.dev_numb == config.dev_numb )
         //КС считаем без полученной КС и net_addr (net_addr не входит в подсчет КС)
         crc = CalcCRC16( (uint8_t *)&ack, sizeof( ack ) - ( sizeof( uint16_t ) * 2 ) );
         if ( ack.crc != crc ) {

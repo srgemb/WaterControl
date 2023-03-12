@@ -35,7 +35,6 @@ extern ZB_CONFIG zb_cfg;
 // Локальные переменные
 //*************************************************************************************************
 static char str[60];
-static uint8_t cnt_last;
 
 static DATE_TIME    data_rtc;
 static MBUS_DTIME   mbus_dtime;
@@ -57,7 +56,7 @@ static WATER_LOG    wtr_log;
 //*************************************************************************************************
 // Прототипы локальных функций
 //*************************************************************************************************
-static uint8_t CreateData( uint8_t cnt_log );
+//static uint8_t CreateData( uint8_t cnt_log );
 
 //*************************************************************************************************
 // Возвращает указатель на структуру DATA_LEAK - состоянию датчиков утечки и 
@@ -307,10 +306,11 @@ uint8_t *GetDataMbus( uint16_t reg_id, uint16_t reg_cnt, uint8_t *bytes ) {
 //-------------------------------------------------------------------------------------------------
 // ZBTypePack type - тип формируемого пакета
 // uint8_t *len    - указатель на переменную для размещения размера сформированного пакета
+// uint16_t addr   - 
 // return == NULL  - тип пакета не указан
 //        != NULL  - указатель на пакет данных
 //*************************************************************************************************
-uint8_t *CreatePack( ZBTypePack type, uint8_t *len ) {
+uint8_t *CreatePack( ZBTypePack type, uint8_t *len, uint16_t addr ) {
 
     *len = 0;
     if ( type == ZB_PACK_STATE ) {
@@ -360,7 +360,11 @@ uint8_t *CreatePack( ZBTypePack type, uint8_t *len ) {
         *len = sizeof( pack_data );
         return (uint8_t *)&pack_data;
        }
-    if ( type == ZB_PACK_WLOG ) {
+    if ( type == ZB_PACK_WLOG && addr != NULL ) {
+        //чтение данных из FRAM
+        memset( (uint8_t *)&wtr_log, 0x00, sizeof( wtr_log ) );
+        if ( FramReadData( addr, (uint8_t *)&wtr_log, sizeof( wtr_log ) ) != FRAM_OK )
+            return NULL;
         //журнальные данные расхода/давления/утечки воды
         pack_data.type_pack = type;                                         //тип пакета
         pack_data.dev_numb = config.dev_numb;                               //номер уст-ва
@@ -475,7 +479,8 @@ ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
             osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_DATA );
         //журнальные данные расхода/давления/утечки воды
         if ( type == ZB_PACK_REQ_DATA && zb_pack_req.count_log ) {
-            if ( CreateData( zb_pack_req.count_log ) )
+            //подготовка данных
+            if ( MakeSort( zb_pack_req.count_log ) )
                 osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_WLOG );
            }
         return SUCCESS;
@@ -546,67 +551,4 @@ DATE_TIME *GetAddrDtime( void ) {
         return &zb_pack_rtc.date_time;
        }
     else return NULL;
- }
- 
-//*************************************************************************************************
-// Подготовка данных из журнала событий (построение таблицы индексов по убыванию дата-время события)
-//-------------------------------------------------------------------------------------------------
-// uint8_t cnt_log - кол-во записей запрашиваемых из журнала
-//*************************************************************************************************
-static uint8_t CreateData( uint8_t cnt_log ) {
-
-    uint16_t addr, rec, cnt;
-
-    cnt = MakeSort();
-    if ( !cnt ) {
-        UartSendStr( "Records not found.\r\n" );
-        return 0;
-       }
-    if ( cnt_log > cnt )
-        return 0; //нельзя запрашивать записей больше чем есть в журнале
-    sprintf( str, "Records uploaded: %u\r\n", cnt );
-    UartSendStr( str );
-    cnt_last = cnt_log; //кол-во запрашиваемых записей
-    for ( rec = 0; rec < cnt && cnt_log; rec++ ) {
-        //выборка адреса данных из FRAM по индексу
-        addr = GetAddrSort( rec );
-        if ( !addr )
-            continue;
-        //чтение данных из FRAM
-        memset( (uint8_t *)&wtr_log, 0x00, sizeof( wtr_log ) );
-        if ( FramReadData( addr, (uint8_t *)&wtr_log, sizeof( wtr_log ) ) != FRAM_OK )
-            continue;
-        cnt_log--;
-        sprintf( str, "LOG: %s #%02u (0x%04X): %02u.%02u.%04u %02u:%02u:%02u\r\n", 
-                 wtr_log.type_event == EVENT_DATA ? "Event" : "ALARM", rec+1, addr, 
-                 wtr_log.day, wtr_log.month, wtr_log.year, wtr_log.hour, wtr_log.min, wtr_log.sec );
-        UartSendStr( str );
-       }
-    return cnt;
- }
-
-//*************************************************************************************************
-// Функция заполняет структуру WATER_LOG данными из журнала событий по указанному индексу.
-// Данные необходимо предварительно подготовить (отсортировать) через вызов CreateData()
-//-------------------------------------------------------------------------------------------------
-// uint8_t rec      - номер записи (индекса) в журнале 0 ... N для получения данных
-// return = SUCCESS - данные доступны в wtr_log
-//          ERROR   - все данные уже прочитаны
-//*************************************************************************************************
-ErrorStatus GetAddrLog( uint8_t rec ) {
-
-    uint16_t addr;
-
-    if ( !cnt_last )
-        return ERROR; //все данные уже прочитаны
-    //адрес данных в журнале
-    addr = GetAddrSort( rec );
-    //чтение данных из FRAM
-    memset( (uint8_t *)&wtr_log, 0x00, sizeof( wtr_log ) );
-    if ( FramReadData( addr, (uint8_t *)&wtr_log, sizeof( wtr_log ) ) != FRAM_OK ) {
-        cnt_last = 0;
-        return ERROR;
-       }
-    cnt_last--;
-    return SUCCESS;
  }

@@ -37,8 +37,7 @@ typedef enum {
     ZB_PACK_REQ_VALVE,                      //состояние электроприводов подачи воды
     ZB_PACK_REQ_DATA,                       //запрос журнальных/текущих данных расхода/давления/утечки воды
     ZB_PACK_CTRL_VALVE,                     //управление электроприводами подачи воды
-    ZB_PACK_ACK                             //подтверждение получение PACK_DATA в случае 
-                                            //срабатывания датчиков утечки
+    ZB_PACK_ACK                             //подтверждение получение пакета с журнальными данными
  } ZBTypePack;
 
 #pragma pack( push, 1 )
@@ -210,8 +209,7 @@ uint8_t *GetDataMbus( uint16_t reg_id, uint16_t reg_cnt, uint8_t *bytes );
 uint8_t *GetDataLog( DataType type, WATER_LOG *wtr_log, uint8_t *size );
 
 DATE_TIME *GetAddrDtime( void );
-uint8_t *CreatePack( ZBTypePack type, uint8_t *len );
+uint8_t *CreatePack( ZBTypePack type, uint8_t *len, uint16_t addr );
 ErrorStatus CheckPack( uint8_t *data, uint8_t len );
-ErrorStatus GetAddrLog( uint8_t rec );
 
 #endif 

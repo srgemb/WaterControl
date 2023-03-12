@@ -124,7 +124,7 @@ extern osEventFlagsId_t uart_event, fram_event, zb_flow, zb_ctrl;
 
 #define EVN_ZC_SEND_STATE           0x00000010  //передача состояния контроллера
 #define EVN_ZC_SEND_DATA            0x00000020  //передача теущих данных расхода воды
-#define EVN_ZC_SEND_WLOG            0x00000040  //передача журнальных данных
+#define EVN_ZC_SEND_WLOG            0x00000040  //запрос журнальных данных
 #define EVN_ZC_SEND_VALVE           0x00000080  //передача состояние электроприводов
 #define EVN_ZC_SEND_LEAKS           0x00000100  //передача состояние датчиков утечки
 

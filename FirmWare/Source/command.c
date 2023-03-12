@@ -848,7 +848,7 @@ static void WaterLog( uint8_t cnt_view ) {
     WATER_LOG wtr_log;
     uint16_t addr, rec, cnt;
 
-    cnt = MakeSort();
+    cnt = MakeSort( cnt_view );
     if ( !cnt ) {
         UartSendStr( "Records not found.\r\n" );
         return;

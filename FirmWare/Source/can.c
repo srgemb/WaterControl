@@ -241,7 +241,7 @@ static void TaskCanRecv( void *argument ) {
             //запрос интервальных показаний
             if ( can_data.rtr == CAN_RTR_DATA && can_cmnd == CAN_COMMAND_LOG ) {
                 log_req = (LOG_REQ *)&can_data.data[0];
-                cnt = MakeSort();
+                cnt = MakeSort( 0 );
                 if ( cnt ) {
                     for ( rec = 0; rec < cnt; rec++ ) {
                         //сортировка данных
