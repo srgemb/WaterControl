@@ -13,11 +13,12 @@ typedef enum {
     VALVE_HOT                               //электропривод крана горячей воды
  } Valve;
 
-//команды управления приводом
+//команды управления электроприводом
 typedef enum {
-    VALVE_CTRL_STOP,                        //остановить привод
+    VALVE_CTRL_NOTHING,                     //ничего не делаем
+    VALVE_CTRL_OPEN,                        //открыть кран
     VALVE_CTRL_CLOSE,                       //закрыть кран
-    VALVE_CTRL_OPEN                         //открыть кран
+    VALVE_CTRL_STOP                         //остановить привод
  } ValveCtrlMode;
 
 //запрос состояние управления электропривода
