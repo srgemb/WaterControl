@@ -209,8 +209,6 @@ void UartSendStr( char *str ) {
             last_send = free;
             HAL_UART_Transmit_DMA( &huart1, (uint8_t *)send_buff, free );
            }
-        //семафор установлен, ждем пока освободится
-        osSemaphoreAcquire( sem_busy, osWaitForever );
        } while ( length );
  }
 
