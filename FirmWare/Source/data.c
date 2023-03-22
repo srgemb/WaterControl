@@ -438,11 +438,12 @@ uint8_t *CreatePack( ZBTypePack type, uint8_t *len, uint16_t addr ) {
 // return = SUCCESS - пакет данных идентифицирован и проверен
 //        = ERROR   - пакет данных не идентифицирован
 //*************************************************************************************************
-ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
+ZBTypePack CheckPack( uint8_t *data, uint8_t len ) {
 
     char *ptr;
     uint16_t crc, addr_dev;
     ZBTypePack type;
+    ZB_PACK_ACK_DATA ack;
     
     type = (ZBTypePack)*data;
     osEventFlagsSet( led_event, EVN_LED_ZB_ACTIVE );
@@ -457,15 +458,15 @@ ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
         crc = CalcCRC16( (uint8_t *)&zb_pack_req, sizeof( zb_pack_req ) - ( sizeof( uint16_t ) * 2 ) );
         if ( zb_pack_req.crc != crc ) {
             ZBIncError( ZB_ERROR_CRC );
-            return ERROR;
+            return ZB_PACK_UNDEF;
            }
         if ( zb_pack_req.dev_numb != config.dev_numb ) {
             ZBIncError( ZB_ERROR_NUMB );
-            return ERROR;
+            return ZB_PACK_UNDEF;
            }
         if ( zb_pack_req.dev_addr != addr_dev ) {
             ZBIncError( ZB_ERROR_NUMB );
-            return ERROR;
+            return ZB_PACK_UNDEF;
            }
         //текущее состояние электроприводов подачи воды
         if ( type == ZB_PACK_REQ_VALVE )
@@ -482,7 +483,7 @@ ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
             if ( MakeSort( zb_pack_req.count_log ) )
                 osEventFlagsSet( zb_ctrl, EVN_ZC_SEND_WLOG );
            }
-        return SUCCESS;
+        return type;
        }
     if ( type == ZB_PACK_SYNC_DTIME && len == sizeof( ZB_PACK_RTC ) ) {
         //синхронизация даты/времени
@@ -491,10 +492,10 @@ ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
         crc = CalcCRC16( (uint8_t *)&zb_pack_rtc, sizeof( zb_pack_rtc ) - ( sizeof( uint16_t ) ) );
         if ( zb_pack_rtc.crc != crc ) {
             ZBIncError( ZB_ERROR_CRC );
-            return ERROR;
+            return ZB_PACK_UNDEF;
            }
         osEventFlagsSet( zb_ctrl, EVN_ZC_SYNC_DTIME );
-        return SUCCESS;
+        return type;
        }
     if ( type == ZB_PACK_CTRL_VALVE && len == sizeof( ZB_PACK_CTRL ) ) {
         //управление кранами подачи воды
@@ -503,15 +504,15 @@ ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
         crc = CalcCRC16( (uint8_t *)&zb_pack_ctrl, sizeof( zb_pack_ctrl ) - ( sizeof( uint16_t ) * 2 ) );
         if ( zb_pack_ctrl.crc != crc ) {
             ZBIncError( ZB_ERROR_CRC );
-            return ERROR;
+            return ZB_PACK_UNDEF;
            }
         if ( zb_pack_ctrl.dev_numb != config.dev_numb ) {
             ZBIncError( ZB_ERROR_NUMB );
-            return ERROR;
+            return ZB_PACK_UNDEF;
            }
         if ( zb_pack_ctrl.dev_addr != addr_dev ) {
             ZBIncError( ZB_ERROR_NUMB );
-            return ERROR;
+            return ZB_PACK_UNDEF;
            }
         //управление электроприводами, отправка подтверждения выполняется из 
         //задачи TaskValve() после завершения работы электроприводов
@@ -530,9 +531,20 @@ ErrorStatus CheckPack( uint8_t *data, uint8_t len ) {
             ptr += sprintf( ptr, "HOT = %s\r\n", ValveCtrlDesc( zb_pack_ctrl.hot ) );
             UartSendStr( str );
            }
-        return SUCCESS;
+        return type;
        }
-    return ERROR;
+    if ( type == ZB_PACK_ACK && len == sizeof( ZB_PACK_ACK_DATA ) ) {
+        //пакет подтверждения
+        memcpy( (uint8_t *)&ack, data, sizeof( ack ) );
+        //КС считаем без полученной КС и net_addr (net_addr не входит в подсчет КС)
+        crc = CalcCRC16( (uint8_t *)&ack, sizeof( ack ) - ( sizeof( uint16_t ) * 2 ) );
+        if ( ack.crc != crc ) {
+            ZBIncError( ZB_ERROR_CRC );
+            return ZB_PACK_UNDEF;
+           }
+        else return type;
+       }
+    return ZB_PACK_UNDEF;
  }
 
 //*************************************************************************************************

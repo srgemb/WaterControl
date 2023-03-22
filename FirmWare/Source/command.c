@@ -911,22 +911,22 @@ static void CmndZigBee( uint8_t cnt_par, char *param ) {
        }
     //аппаратный перезапуск модуля
     if ( cnt_par == 2 && !strcasecmp( GetParamVal( IND_PARAM1 ), "res" ) )
-        state = ZBControl( ZB_DEV_RESET );
+        state = ZBControl( ZB_CMD_DEV_RESET );
     //программный перезапуск модуля
     if ( cnt_par == 2 && !strcasecmp( GetParamVal( IND_PARAM1 ), "init" ) )
-        state = ZBControl( ZB_DEV_INIT );
+        state = ZBControl( ZB_CMD_DEV_INIT );
     //переподключение к сети
     if ( cnt_par == 2 && !strcasecmp( GetParamVal( IND_PARAM1 ), "net" ) )
-        state = ZBControl( ZB_NET_RESTART );
+        state = ZBControl( ZB_CMD_NET_RESTART );
     //запись конфигурации в радио модуль
     if ( cnt_par == 2 && !strcasecmp( GetParamVal( IND_PARAM1 ), "save" ) )
-        state = ZBControl( ZB_SAVE_CONFIG );
+        state = ZBControl( ZB_CMD_SAVE_CONFIG );
     //проверка конфигурации радио модуля
     if ( cnt_par == 2 && !strcasecmp( GetParamVal( IND_PARAM1 ), "chk" ) )
         ZBCheckConfig();
     //чтение и вывод конфигурации
     if ( cnt_par == 2 && !strcasecmp( GetParamVal( IND_PARAM1 ), "cfg" ) ) {
-        state = ZBControl( ZB_READ_CONFIG );
+        state = ZBControl( ZB_CMD_READ_CONFIG );
         if ( state == ZB_ERROR_OK )
             ZBConfig(); //вывод параметров конфигурации
        }

@@ -136,10 +136,8 @@ extern osEventFlagsId_t uart_event, fram_event, zb_flow, zb_ctrl;
                                     EVN_ZC_SEND_WLOG | EVN_ZC_SYNC_DTIME | EVN_ZC_SEND_LEAKS | EVN_ZC_IM_HERE )
 
 #define EVN_ZB_RECV_CHECK           0x00000001  //прием пакета завершен
-#define EVN_ZB_RECV_TIMEOUT         0x00000002  //вышло время ожидания ответа
-#define EVN_ZB_SEND_COMPLT          0x00000004  //завершение передачи из UART2
 
-#define EVN_ZB_MASK                 ( EVN_ZB_RECV_CHECK | EVN_ZB_RECV_TIMEOUT | EVN_ZB_SEND_COMPLT )
+#define EVN_ZB_MASK                 ( EVN_ZB_RECV_CHECK )
 
 //*************************************************************************************************
 // Cобытия обрабатываемые в задачах "Modbus"

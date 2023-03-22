@@ -211,6 +211,6 @@ uint8_t *GetDataLog( DataType type, WATER_LOG *wtr_log, uint8_t *size );
 
 DATE_TIME *GetAddrDtime( void );
 uint8_t *CreatePack( ZBTypePack type, uint8_t *len, uint16_t addr );
-ErrorStatus CheckPack( uint8_t *data, uint8_t len );
+ZBTypePack CheckPack( uint8_t *data, uint8_t len );
 
 #endif 

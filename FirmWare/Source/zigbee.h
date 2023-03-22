@@ -20,14 +20,14 @@
 
 //Команды управления ZigBee модулем
 typedef enum {
-    ZB_NO_COMMAND,
-    ZB_DEV_RESET,                           //аппаратный перезапуск ZigBee 
-    ZB_READ_CONFIG,                         //чтение конфигурации
-    ZB_SAVE_CONFIG,                         //запись конфигурации
-    ZB_DEV_INIT,                            //программный перезапуск ZigBee 
-    ZB_DEV_FACTORY,                         //установка заводских настроек
-    ZB_NET_RESTART,                         //переподключение к сети
-    ZB_SEND_DATA                            //передача данных терминал -> координатор
+    ZB_CMD_NO_COMMAND,
+    ZB_CMD_DEV_RESET,                           //аппаратный перезапуск ZigBee 
+    ZB_CMD_READ_CONFIG,                         //чтение конфигурации
+    ZB_CMD_SAVE_CONFIG,                         //запись конфигурации
+    ZB_CMD_DEV_INIT,                            //программный перезапуск ZigBee 
+    ZB_CMD_DEV_FACTORY,                         //установка заводских настроек
+    ZB_CMD_NET_RESTART,                         //переподключение к сети
+    ZB_CMD_SEND_DATA                            //передача данных терминал -> координатор
  } ZBCmnd;
 
 //Результат выполнения команд управления модулем ZigBee 
@@ -44,8 +44,9 @@ typedef enum {
     ZB_ERROR_CRC,                           //ошибка контрольной суммы в полученном пакете данных
     ZB_ERROR_NUMB,                          //ошибка номер уст-ва в полученном пакете не совпадает 
                                             //с номеров в настройках контроллера
-    ZB_ERROR_ADDR                           //ошибка адрес уст-ва в полученном пакете не совпадает 
+    ZB_ERROR_ADDR,                          //ошибка адрес уст-ва в полученном пакете не совпадает 
                                             //с адресом в настройках контроллера
+    ZB_ERROR_UNDEF                          //ответ модуля (тип пакета данных) не идентифицирован
  } ZBErrorState;
 
 //Запрос состояния модуля ZigBee 
@@ -56,16 +57,16 @@ typedef enum {
 
 //Коды ответов модуля ZigBee 
 typedef enum {
-    ZB_ANSWER_ERROR,                        //ошибка команды
-    ZB_ANSWER_BLD_NET,                      //Координатор запросил информацию при установлении сети
-    ZB_ANSWER_JOIN_NET,                     //выполнено подключение к сети
-    ZB_ANSWER_NO_NET,                       //сеть потеряна
-    ZB_ANSWER_SET_CONFIG,                   //Запись конфигурации выполнена
-    ZB_ANSWER_RESTART,                      //ZigBee  перезапущен
-    ZB_ANSWER_CFG_FACTORY,                  //сброс настроек выполнен
-    ZB_ANSWER_NET_RESTART,                  //модуль переподключен к сети
-    ZB_ANSWER_ACK,                          //получено подтверждение получение отправленных данных
-    ZB_ANSWER_UNDEF                         //ответ не определен
+    ZB_ANS_UNDEF,                           //ответ не определен
+    ZB_ANS_ERROR,                           //ошибка команды
+    ZB_ANS_BLD_NET,                         //Координатор запросил информацию при установлении сети
+    ZB_ANS_JOIN_NET,                        //выполнено подключение к сети
+    ZB_ANS_NO_NET,                          //сеть потеряна
+    ZB_ANS_SET_CONFIG,                      //Запись конфигурации выполнена
+    ZB_ANS_RESTART,                         //ZigBee  перезапущен
+    ZB_ANS_CFG_FACTORY,                     //сброс настроек выполнен
+    ZB_ANS_NET_RESTART,                     //модуль переподключен к сети
+    ZB_ANS_READ_CONFIG                      //Чтение конфигурации выполнена
  } ZBAnswer;
 
 //Уровень выходной мощности без PA/c PA
@@ -82,6 +83,12 @@ typedef enum {
     ZB_NETSTATE_NO,                         //No network
     ZB_NETSTATE_OK                          //Network exists
  } ZBNetState;
+
+//Тип отладочной информации
+typedef enum {
+    ZB_DEBUG_TX,                            //вывод принятой информации
+    ZB_DEBUG_RX                             //вывод передаваемой информации
+ } ZBDebugMode;
 
 //*************************************************************************************************
 // Параметры для модуля ZigBee
