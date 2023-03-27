@@ -852,16 +852,18 @@ void ZBConfig( void ) {
     UartSendStr( str );
     ptr = str;
     ptr += sprintf( ptr, "MAC address ........................... " );
-    for ( ind = 0; ind < sizeof( zb_cfg.mac_addr ); ind++ )
-        ptr += sprintf( ptr, "%02X ", zb_cfg.mac_addr[ind] );
+    for ( ind = 0; ind < sizeof( zb_cfg.mac_addr ) - 1; ind++ )
+        ptr += sprintf( ptr, "%02X:", zb_cfg.mac_addr[ind] );
+    ptr += sprintf( ptr, "%02X ", zb_cfg.mac_addr[ind] );
     ptr += sprintf( ptr, "\r\n" );
     UartSendStr( str );
     sprintf( str, "Network short address of father node .. 0x%02X%02X\r\n", zb_cfg.coor_short_addr[0], zb_cfg.coor_short_addr[1] );
     UartSendStr( str );
     ptr = str;
     ptr += sprintf( ptr, "MAC address of father node ............ " );
-    for ( ind = 0; ind < sizeof( zb_cfg.coor_mac_addr ); ind++ )
-        ptr += sprintf( ptr, "%02X ", zb_cfg.coor_mac_addr[ind] );
+    for ( ind = 0; ind < sizeof( zb_cfg.coor_mac_addr ) - 1; ind++ )
+        ptr += sprintf( ptr, "%02X:", zb_cfg.coor_mac_addr[ind] );
+    ptr += sprintf( ptr, "%02X", zb_cfg.coor_mac_addr[ind] );
     ptr += sprintf( ptr, "\r\n" );
     UartSendStr( str );
     sprintf( str, "Network group number .................. %u\r\n", zb_cfg.group );
