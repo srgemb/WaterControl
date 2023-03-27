@@ -59,7 +59,7 @@ osEventFlagsId_t uart_event = NULL;
 //*************************************************************************************************
 // Локальные переменные
 //*************************************************************************************************
-static uint16_t recv_ind = 0, head = 0, tail = 0, last_send = 0;
+static uint16_t recv_ind = 0, tail = 0, head_tx = 0, tail_tx = 0;
 static char recv_ch, recv_buff[RECV_BUFF_SIZE], send_buff[SEND_BUFF_SIZE];
 static osSemaphoreId_t sem_busy;
 
@@ -69,7 +69,7 @@ static osSemaphoreId_t sem_busy;
 static const osThreadAttr_t task_attr = {
     .name = "Uart", 
     .stack_size = 384,
-    .priority = osPriorityNormal
+    .priority = osPriorityBelowNormal
  };
 
 static const osSemaphoreAttr_t sem_attr = { .name = "UartSemaph" };
@@ -104,7 +104,6 @@ void UartInit( void ) {
 static void TaskUart( void *argument ) {
 
     int32_t event;
-    uint16_t new_len;
 
     for ( ;; ) {
         event = osEventFlagsWait( uart_event, EVN_UART_MASK, osFlagsWaitAny, osWaitForever );
@@ -116,19 +115,18 @@ static void TaskUart( void *argument ) {
           }
         if ( event & EVN_UART_NEXT ) {
             //передача блока завершена
-            head += last_send; //новое значение индекса головы
-            new_len = tail - head;
-            if ( new_len ) //пока выполнялась передача, возможно добавлены новые данные для вывода
-                HAL_UART_Transmit_DMA( &huart1, (uint8_t *)( send_buff + head ), new_len );
-            else { 
-                //передача завершена
-                if ( tail == head ) {
-                    //индекс хвоста и головы совпадает - все передано
-                    tail = head = last_send = 0;
-                    osSemaphoreRelease( sem_busy );
-                   }
+            if ( tail == tail_tx ) {
+                //индекс хвоста буфера и индекс хвоста передачи совпадает - все передано
+                tail = head_tx = tail_tx = 0;
+                memset( send_buff, 0x00, sizeof( send_buff ) );
+                osSemaphoreRelease( sem_busy );
                }
-            last_send = new_len;
+            else {
+                //передача продолжается, добавлены данные
+                head_tx = tail_tx;  //индекс головы перемещаем в конец переданного ранее блока
+                tail_tx = tail;     //индекс своста перемещаем на окончание добавленных данных
+                HAL_UART_Transmit_DMA( &huart1, (uint8_t *)( send_buff + head_tx ), tail_tx - head_tx );
+               }
           }
        }
  }
@@ -161,10 +159,7 @@ void UartRecvComplt( void ) {
 //*************************************************************************************************
 void UartSendComplt( void ) {
 
-    if ( tail > head ) {
-        //индекс хвоста и головы не совпали - что-то добавили
-        osEventFlagsSet( uart_event, EVN_UART_NEXT );
-       }
+    osEventFlagsSet( uart_event, EVN_UART_NEXT );
  }
 
 //*************************************************************************************************
@@ -174,11 +169,10 @@ void UartSendComplt( void ) {
 //*************************************************************************************************
 void UartSendStr( char *str ) {
 
-    bool start;
+    bool start = false;
     uint16_t length, free, offset = 0;
     
     length = strlen( str );
-    //размер строки больше размера буфера, выводить будем по частям
     do {
         //доступное место в буфере
         free = sizeof( send_buff ) - tail;
@@ -197,16 +191,17 @@ void UartSendStr( char *str ) {
         else {
             //места для размещения всей строки достаточно, добавляем в буфер всю строку
             memcpy( send_buff + tail, str + offset, length );
-            free = length; //размер передаваемого фрагмента
+            free = length; //размер добавляемого фрагмента
             length = 0;    //размер оставшейся части строки
            }
-        if ( !tail && !head )
+        if ( !tail )
             start = true; //признак начала передачи
         else start = false;
-        tail += free;
+        tail += free;      //увеличиваем индекс хвоста 
         if ( start == true ) {
             //начало передачи
-            last_send = free;
+            head_tx = 0;
+            tail_tx = tail;
             HAL_UART_Transmit_DMA( &huart1, (uint8_t *)send_buff, free );
            }
        } while ( length );
